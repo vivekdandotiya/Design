@@ -16,6 +16,9 @@ function App() {
   const [selectedTV, setSelectedTV] = useState<any>(null);
   const [selectedSign, setSelectedSign] = useState<string | null>(null);
 
+  // Art Critic state for Gallery scene
+  const [artCritic, setArtCritic] = useState(false);
+
   // Programmatic Scroll Wheel & Touch drag listener for Corridor navigation
   useEffect(() => {
     if (currentScene !== 'corridor') return;
@@ -147,6 +150,7 @@ function App() {
         <CorridorScene
           currentScene={currentScene}
           scrollProgress={scrollProgress}
+          artCritic={artCritic}
           onEnterCorridor={handleEnterCorridor}
           onEnterRoom={handleEnterRoom}
           onSelectProject={setSelectedProject}
@@ -163,7 +167,9 @@ function App() {
           selectedTV={selectedTV}
           selectedSign={selectedSign}
           isAudioOn={isAudioOn}
+          artCritic={artCritic}
           onToggleAudio={() => setIsAudioOn(!isAudioOn)}
+          onToggleArtCritic={() => setArtCritic(!artCritic)}
           onBack={handleBackToCorridor}
           onCloseOverlay={() => {
             setSelectedProject(null);

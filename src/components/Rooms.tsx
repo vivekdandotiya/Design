@@ -1,16 +1,395 @@
-import React, { useMemo, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-// ----------------------------------------------------
-// 1. GALLERY ROOM
-// ----------------------------------------------------
+// ====================================================
+// 1. GALLERY ROOM ( clothesline wire, city skyline, sways, art critic )
+// ====================================================
 interface GalleryRoomProps {
   onSelectProject: (project: any) => void;
+  artCritic: boolean;
 }
 
-export const GalleryRoom: React.FC<GalleryRoomProps> = ({ onSelectProject }) => {
+// Sub-component for individual project cards hanging on the wire
+const HangingCard: React.FC<{
+  project: any;
+  index: number;
+  artCritic: boolean;
+  onSelect: () => void;
+  hasDraggedRef: React.MutableRefObject<boolean>;
+}> = ({ project, index, artCritic, onSelect, hasDraggedRef }) => {
+  const cardRef = useRef<THREE.Group>(null);
+  const shaderRef = useRef<THREE.ShaderMaterial>(null);
+  const progressRef = useRef(0);
+  const [hovered, setHovered] = useState(false);
+
+  // 1. Sketch Texture (black ink, hand-drawn paper look)
+  const sketchTexture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 680;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return new THREE.Texture();
+
+    ctx.fillStyle = '#faf8f5';
+    ctx.fillRect(0, 0, 512, 680);
+
+    // Sketchy double border
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(15, 15, 482, 650);
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(25, 25, 462, 630);
+
+    // Crosshatch shading at the top corners
+    ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+    ctx.lineWidth = 1;
+    for (let i = 25; i < 150; i += 8) {
+      ctx.beginPath(); ctx.moveTo(i, 25); ctx.lineTo(25, i); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(487 - i, 25); ctx.lineTo(487, i); ctx.stroke();
+    }
+
+    // Title
+    ctx.fillStyle = '#1a1a1a';
+    ctx.font = 'bold 36px "Gloria Hallelujah", cursive';
+    ctx.textAlign = 'center';
+    ctx.fillText(project.title, 256, 95);
+
+    // Line under title
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(100, 120);
+    ctx.lineTo(412, 120);
+    ctx.stroke();
+
+    // Sketchy Graphics depending on the project
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 3.5;
+    ctx.fillStyle = '#faf8f5';
+
+    if (project.title.includes('MoneTune')) {
+      // Sleek database cylinders & browser wireframe
+      ctx.strokeRect(96, 170, 320, 200); // browser frame
+      // cylinders
+      ctx.strokeRect(140, 210, 60, 110);
+      ctx.strokeRect(310, 250, 60, 70);
+      // dollar sign
+      ctx.font = 'bold 44px "Gloria Hallelujah", cursive';
+      ctx.fillText('$', 256, 280);
+    } 
+    else if (project.title.includes('TimberKitty')) {
+      // Sketchy cat chopping wood
+      ctx.strokeRect(96, 170, 320, 200);
+      // Logs
+      ctx.strokeRect(130, 290, 80, 50);
+      ctx.strokeRect(290, 280, 90, 60);
+      // Axe
+      ctx.beginPath();
+      ctx.moveTo(220, 230); ctx.lineTo(260, 280); // handle
+      ctx.stroke();
+      ctx.fillRect(245, 260, 30, 20); // axe head
+      ctx.strokeRect(245, 260, 30, 20);
+    } 
+    else if (project.title.includes('Young Multi')) {
+      // Music cassette tape & CD
+      ctx.strokeRect(96, 170, 320, 200);
+      // cassette
+      ctx.strokeRect(120, 220, 130, 80);
+      ctx.strokeRect(140, 240, 90, 40);
+      // CD circle
+      ctx.beginPath();
+      ctx.arc(320, 270, 50, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(320, 270, 15, 0, Math.PI*2);
+      ctx.stroke();
+    } 
+    else {
+      // Bio / Face portrait
+      ctx.strokeRect(96, 170, 320, 200);
+      // head
+      ctx.beginPath();
+      ctx.arc(256, 250, 50, 0, Math.PI*2);
+      ctx.fill();
+      ctx.stroke();
+      // glasses
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(220, 240, 28, 22);
+      ctx.strokeRect(264, 240, 28, 22);
+    }
+
+    // Details text
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.font = '24px "Caveat", cursive';
+    ctx.fillText(project.desc.substring(0, 45) + '...', 256, 440);
+
+    // Tech badges sketched
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 2;
+    ctx.font = '20px "Gloria Hallelujah", cursive';
+    project.tags.forEach((tag: string, i: number) => {
+      const tx = 90 + i * 160;
+      ctx.strokeRect(tx, 520, 140, 55);
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fillText(tag, tx + 70, 555);
+    });
+
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.font = '18px "Gloria Hallelujah", cursive';
+    ctx.fillText('Click project to inspect', 256, 625);
+
+    return new THREE.CanvasTexture(canvas);
+  }, [project]);
+
+  // 2. Color Texture (Vibrant colors, gradients)
+  const colorTexture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 680;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return new THREE.Texture();
+
+    // Determine card gradient based on project
+    let gradStart = '#ffffff';
+    let gradEnd = '#e0e0e0';
+    let textColor = '#1a1a1a';
+    let accentText = '#c94a4a';
+
+    if (project.title.includes('MoneTune')) {
+      gradStart = '#4facfe'; gradEnd = '#00f2fe';
+      textColor = '#ffffff'; accentText = '#ffff00';
+    } else if (project.title.includes('TimberKitty')) {
+      gradStart = '#0ba360'; gradEnd = '#3cba92';
+      textColor = '#ffffff'; accentText = '#f9d423';
+    } else if (project.title.includes('Young Multi')) {
+      gradStart = '#f857a6'; gradEnd = '#ff5858';
+      textColor = '#ffffff'; accentText = '#00ffff';
+    } else {
+      gradStart = '#ff9a9e'; gradEnd = '#fecfef';
+      textColor = '#333333'; accentText = '#8e2de2';
+    }
+
+    const grad = ctx.createLinearGradient(0, 0, 512, 680);
+    grad.addColorStop(0, gradStart);
+    grad.addColorStop(1, gradEnd);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 512, 680);
+
+    // Frame border
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 14;
+    ctx.strokeRect(7, 7, 498, 666);
+
+    // Glassmorphic card overlay
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.fillRect(35, 35, 442, 610);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(35, 35, 442, 610);
+
+    // Title
+    ctx.fillStyle = textColor;
+    ctx.font = '800 42px "Inter", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(project.title, 256, 110);
+
+    // Mock Dashboard
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(80, 180, 352, 220, 12) : ctx.rect(80, 180, 352, 220);
+    ctx.fill();
+
+    // Browser dots
+    ctx.fillStyle = '#ff5f56'; ctx.beginPath(); ctx.arc(110, 205, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffbd2e'; ctx.beginPath(); ctx.arc(130, 205, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#27c93f'; ctx.beginPath(); ctx.arc(150, 205, 7, 0, Math.PI * 2); ctx.fill();
+
+    // Wave / detail drawing in color
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(110, 310);
+    ctx.lineTo(200, 260);
+    ctx.lineTo(290, 340);
+    ctx.lineTo(400, 290);
+    ctx.stroke();
+
+    // Details text
+    ctx.fillStyle = textColor;
+    ctx.font = '600 22px "Inter", sans-serif';
+    ctx.fillText(project.desc.substring(0, 40) + '...', 256, 460);
+
+    // Tech Tags
+    ctx.fillStyle = accentText;
+    ctx.font = 'bold 24px "Inter", sans-serif';
+    ctx.fillText(project.tags.join(' • '), 256, 540);
+
+    ctx.fillStyle = textColor;
+    ctx.font = 'bold 20px "Inter", sans-serif';
+    ctx.fillText('OPEN PROJECT', 256, 610);
+
+    return new THREE.CanvasTexture(canvas);
+  }, [project]);
+
+  // 3. Custom shader for noise transition dissolve effect
+  const shaderMaterial = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        uTextureSketch: { value: sketchTexture },
+        uTextureColor: { value: colorTexture },
+        uProgress: { value: 0.0 },
+        uTime: { value: 0.0 }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        varying vec2 vUv;
+        uniform sampler2D uTextureSketch;
+        uniform sampler2D uTextureColor;
+        uniform float uProgress;
+        uniform float uTime;
+
+        // Custom pseudo-random function for noise
+        float rand(vec2 co){
+            return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+        }
+
+        void main() {
+          vec4 sketch = texture2D(uTextureSketch, vUv);
+          vec4 color = texture2D(uTextureColor, vUv);
+          
+          float r = rand(vUv * 64.0 + sin(uTime) * 0.01);
+          float threshold = uProgress;
+          float factor = smoothstep(threshold - 0.08, threshold + 0.08, r);
+          
+          vec4 finalColor = mix(color, sketch, factor);
+          gl_FragColor = finalColor;
+        }
+      `
+    });
+  }, [sketchTexture, colorTexture]);
+
+  // Swaying and hover transitions
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+
+    if (cardRef.current) {
+      // Gentle swaying in the wind
+      const swayZ = Math.sin(time * 1.5 + index * 0.8) * 0.03;
+      const swayY = Math.cos(time * 0.8 + index * 0.5) * 0.015;
+      cardRef.current.rotation.z = swayZ;
+      cardRef.current.rotation.y = swayY;
+
+      // Hover floating offset
+      const targetScale = hovered ? 1.08 : 1.0;
+      cardRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, 1), 0.1);
+    }
+
+    if (shaderRef.current) {
+      shaderRef.current.uniforms.uTime.value = time;
+      
+      // Interpolate progress smoothly depending on artCritic state
+      const targetProgress = artCritic ? 1.0 : 0.0;
+      progressRef.current = THREE.MathUtils.lerp(progressRef.current, targetProgress, 0.06);
+      shaderRef.current.uniforms.uProgress.value = progressRef.current;
+    }
+  });
+
+  return (
+    <group ref={cardRef}>
+      {/* 3D Clothespin clip peg */}
+      <mesh position={[0, 1.35, 0.02]}>
+        <boxGeometry args={[0.08, 0.3, 0.06]} />
+        <meshBasicMaterial color="#d4b08c" /> {/* Wooden color */}
+      </mesh>
+      {/* Peg shadow backing */}
+      <mesh position={[0.02, 1.32, -0.01]}>
+        <boxGeometry args={[0.08, 0.3, 0.06]} />
+        <meshBasicMaterial color="#1a1a1a" />
+      </mesh>
+
+      {/* Main Card Mesh */}
+      <mesh
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!hasDraggedRef.current) {
+            onSelect();
+          }
+        }}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+      >
+        <planeGeometry args={[1.5, 2.0]} />
+        <primitive object={shaderMaterial} ref={shaderRef} attach="material" />
+      </mesh>
+
+      {/* Sketched Frame shadow backing */}
+      <mesh position={[0.05, -0.05, -0.02]}>
+        <planeGeometry args={[1.5, 2.0]} />
+        <meshBasicMaterial color="#1a1a1a" />
+      </mesh>
+    </group>
+  );
+};
+
+export const GalleryRoom: React.FC<GalleryRoomProps> = ({ onSelectProject, artCritic }) => {
   const groupRef = useRef<THREE.Group>(null);
+  const { gl } = useThree();
+  
+  // Dragging scroll state
+  const dragOffset = useRef(0);
+  const pointerDownX = useRef(0);
+  const isDragging = useRef(false);
+  const hasDragged = useRef(false);
+  const dragStartOffset = useRef(0);
+  const hasDraggedRef = useRef(false);
+
+  useEffect(() => {
+    const handleDown = (e: PointerEvent) => {
+      isDragging.current = true;
+      hasDragged.current = false;
+      hasDraggedRef.current = false;
+      pointerDownX.current = e.clientX;
+      dragStartOffset.current = dragOffset.current;
+    };
+
+    const handleMove = (e: PointerEvent) => {
+      if (!isDragging.current) return;
+      const deltaX = e.clientX - pointerDownX.current;
+      
+      if (Math.abs(deltaX) > 8) {
+        hasDragged.current = true;
+        hasDraggedRef.current = true;
+      }
+
+      const scaleFactor = 0.015;
+      dragOffset.current = dragStartOffset.current + deltaX * scaleFactor;
+
+      // Clamp clothesline scroll limit (span from -7 to 7)
+      dragOffset.current = Math.min(Math.max(dragOffset.current, -7), 7);
+    };
+
+    const handleUp = () => {
+      isDragging.current = false;
+    };
+
+    const dom = gl.domElement;
+    dom.addEventListener('pointerdown', handleDown);
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleUp);
+
+    return () => {
+      dom.removeEventListener('pointerdown', handleDown);
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+    };
+  }, [gl]);
 
   // Skyline background texture
   const skylineTexture = useMemo(() => {
@@ -23,10 +402,10 @@ export const GalleryRoom: React.FC<GalleryRoomProps> = ({ onSelectProject }) => 
     ctx.fillStyle = '#faf8f5';
     ctx.fillRect(0,0,1024,512);
 
-    // Sketchy buildings
+    // Sketchy buildings outline
     ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 3;
-    ctx.fillStyle = '#f4eedb';
+    ctx.lineWidth = 3.5;
+    ctx.fillStyle = '#faf8f5';
 
     const drawBuilding = (x: number, w: number, h: number) => {
       ctx.beginPath();
@@ -34,16 +413,16 @@ export const GalleryRoom: React.FC<GalleryRoomProps> = ({ onSelectProject }) => 
       ctx.fill();
       ctx.stroke();
 
-      // Windows
-      ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-      ctx.lineWidth = 1.5;
-      for (let wy = 512 - h + 20; wy < 490; wy += 30) {
-        for (let wx = x + 15; wx < x + w - 10; wx += 25) {
+      // Windows sketchy lines
+      ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+      ctx.lineWidth = 1.8;
+      for (let wy = 512 - h + 20; wy < 490; wy += 35) {
+        for (let wx = x + 15; wx < x + w - 15; wx += 25) {
           ctx.strokeRect(wx, wy, 12, 18);
         }
       }
       ctx.strokeStyle = '#1a1a1a';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 3.5;
     };
 
     drawBuilding(50, 120, 280);
@@ -74,10 +453,9 @@ export const GalleryRoom: React.FC<GalleryRoomProps> = ({ onSelectProject }) => 
     ctx.strokeRect(0, 10, 512, 12);
     ctx.strokeRect(0, 106, 512, 12);
 
-    // vertical balusters with sketchy loops
+    // vertical balusters with loops
     for (let x = 20; x < 512; x += 40) {
       ctx.strokeRect(x, 22, 10, 84);
-      // loops
       ctx.beginPath();
       ctx.arc(x + 5, 64, 12, 0, Math.PI * 2);
       ctx.stroke();
@@ -90,98 +468,63 @@ export const GalleryRoom: React.FC<GalleryRoomProps> = ({ onSelectProject }) => 
   }, []);
 
   const projects = [
-    { title: 'MoneTune', desc: 'A fast, modern personal budget and finance dashboard tracking subscriptions and expenses.', tags: ['React', 'Node', 'Postgres'] },
-    { title: 'TimberKitty', desc: 'An addictive browser arcade game where players control a lumberjack cat to chop wood and save birds.', tags: ['JS', 'CSS Grid', 'GSAP'] },
+    { title: 'Tomasz Szmajda', desc: 'A fast, modern personal bio page serving as a central hub for all my latest projects and digital footprint.', tags: ['React', 'Next.js', 'Vercel'] },
+    { title: 'MoneTune', desc: 'A fast, personal budget and finance dashboard tracking expenses and recurring subscriptions.', tags: ['React', 'Node', 'Postgres'] },
+    { title: 'TimberKitty', desc: 'An addictive browser arcade game where players control a lumberjack cat to chop wood.', tags: ['JS', 'CSS Grid', 'GSAP'] },
+    { title: 'MoneTune (v2)', desc: 'A personal budget and finance dashboard tracking expenses and recurring subscriptions.', tags: ['React', 'Node', 'Postgres'] },
+    { title: 'TimberKitty (v2)', desc: 'An addictive browser arcade game where players control a lumberjack cat to chop wood.', tags: ['JS', 'CSS Grid', 'GSAP'] },
     { title: 'Young Multi', desc: 'A sleek, modern 3D promotional landing page mapped to custom scroll camera behaviors.', tags: ['Three.js', 'R3F', 'Blender'] },
-    { title: 'Bio Portfolio', desc: 'A personal identity landing serving as a central hub for all my latest projects.', tags: ['HTML5', 'Sass', 'Webpack'] }
+    { title: 'Tomasz Szmajda (v2)', desc: 'A fast, modern personal bio page serving as a central hub for all my latest projects.', tags: ['React', 'Next.js', 'Vercel'] }
   ];
 
+  // Lerp horizontal drag position
+  useFrame(() => {
+    if (groupRef.current) {
+      groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, dragOffset.current, 0.08);
+    }
+  });
+
   return (
-    <group ref={groupRef}>
+    <group>
       {/* City Skyline Background */}
       <mesh position={[0, 1.5, -6]}>
         <planeGeometry args={[16, 8]} />
         <meshBasicMaterial map={skylineTexture} />
       </mesh>
 
-      {/* Fence Railing */}
+      {/* Fence Railing Balcony */}
       <mesh position={[0, -1.8, -2]}>
         <planeGeometry args={[10, 2.5]} />
         <meshBasicMaterial map={fenceTexture} transparent />
       </mesh>
 
-      {/* Hanging Wire */}
-      <mesh position={[0, 2, -3]}>
-        <planeGeometry args={[8, 0.05]} />
+      {/* Hanging Wire clothesline */}
+      <mesh position={[0, 2, -3.1]}>
+        <planeGeometry args={[30, 0.02]} />
         <meshBasicMaterial color="#1a1a1a" />
       </mesh>
 
-      {/* Hanging Project Cards */}
-      {projects.map((proj, idx) => {
-        const xPos = -3 + idx * 2.0;
-        return (
-          <group 
-            key={proj.title} 
-            position={[xPos, 0.6, -2.8]}
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelectProject(proj);
-            }}
-          >
-            {/* Hanging clip */}
-            <mesh position={[0, 1.25, 0]}>
-              <boxGeometry args={[0.08, 0.3, 0.05]} />
-              <meshBasicMaterial color="#c94a4a" />
-            </mesh>
-
-            {/* Main Card Sheet */}
-            <mesh>
-              <planeGeometry args={[1.5, 2.0]} />
-              <meshBasicMaterial color="#faf8f5" side={THREE.DoubleSide} />
-            </mesh>
-
-            {/* Sketched Frame Board border */}
-            <mesh position={[0, 0, -0.01]}>
-              <planeGeometry args={[1.56, 2.06]} />
-              <meshBasicMaterial color="#1a1a1a" />
-            </mesh>
-
-            {/* Project Title Text labels inside card */}
-            <group position={[0, 0, 0.01]}>
-              <mesh>
-                <planeGeometry args={[1.3, 1.8]} />
-                <meshBasicMaterial 
-                  transparent 
-                  map={useMemo(() => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 128;
-                    canvas.height = 128;
-                    const ctx = canvas.getContext('2d');
-                    if (ctx) {
-                      ctx.fillStyle = '#faf8f5';
-                      ctx.fillRect(0,0,128,128);
-                      ctx.strokeStyle = '#1a1a1a';
-                      ctx.lineWidth = 2;
-                      ctx.strokeRect(5,5,118,118);
-                      ctx.fillStyle = '#1a1a1a';
-                      ctx.font = 'bold 18px "Gloria Hallelujah", cursive';
-                      ctx.textAlign = 'center';
-                      ctx.fillText(proj.title, 64, 40);
-                      ctx.font = '14px "Caveat", cursive';
-                      ctx.fillText('Click to Inspect', 64, 85);
-                    }
-                    return new THREE.CanvasTexture(canvas);
-                  }, [proj.title])} 
-                />
-              </mesh>
+      {/* Draggable group of hanging clothesline cards */}
+      <group ref={groupRef}>
+        {projects.map((proj, idx) => {
+          // Span from -6 to 6 units
+          const xPos = -6 + idx * 2.0;
+          return (
+            <group key={`${proj.title}-${idx}`} position={[xPos, 0.6, -3.0]}>
+              <HangingCard
+                project={proj}
+                index={idx}
+                artCritic={artCritic}
+                onSelect={() => onSelectProject(proj)}
+                hasDraggedRef={hasDraggedRef}
+              />
             </group>
-          </group>
-        );
-      })}
+          );
+        })}
+      </group>
     </group>
   );
 };
-
 
 // ----------------------------------------------------
 // 2. STUDIO ROOM (FALLING MONITORS)

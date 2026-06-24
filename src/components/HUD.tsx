@@ -6,7 +6,9 @@ interface HUDProps {
   selectedTV: any;
   selectedSign: string | null;
   isAudioOn: boolean;
+  artCritic: boolean;
   onToggleAudio: () => void;
+  onToggleArtCritic: () => void;
   onBack: () => void;
   onCloseOverlay: () => void;
 }
@@ -17,7 +19,9 @@ export const HUD: React.FC<HUDProps> = ({
   selectedTV,
   selectedSign,
   isAudioOn,
+  artCritic,
   onToggleAudio,
+  onToggleArtCritic,
   onBack,
   onCloseOverlay,
 }) => {
@@ -144,6 +148,22 @@ export const HUD: React.FC<HUDProps> = ({
       {currentScene === 'corridor' && (
         <div className="corridor-hud-help">
           Scroll to Glide • Click Doors to Enter
+        </div>
+      )}
+
+      {/* 8. Art Critic Toggle for Gallery */}
+      {currentScene === 'gallery' && !selectedProject && (
+        <div className="gallery-bottom-controls">
+          <label className="art-critic-label">
+            <input 
+              type="checkbox" 
+              checked={artCritic}
+              onChange={onToggleArtCritic}
+              className="art-critic-checkbox"
+            />
+            <span className="art-critic-text">ART CRITIC</span>
+          </label>
+          <div className="art-critic-subtext">Click project to inspect</div>
         </div>
       )}
     </>

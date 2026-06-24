@@ -87,6 +87,7 @@ const CameraRig: React.FC<CameraRigProps> = ({ currentScene, scrollProgress }) =
 interface CorridorSceneProps {
   currentScene: string;
   scrollProgress: number;
+  artCritic: boolean;
   onEnterCorridor: () => void;
   onEnterRoom: (room: string) => void;
   onSelectProject: (project: any) => void;
@@ -97,6 +98,7 @@ interface CorridorSceneProps {
 export const CorridorScene: React.FC<CorridorSceneProps> = ({
   currentScene,
   scrollProgress,
+  artCritic,
   onEnterCorridor,
   onEnterRoom,
   onSelectProject,
@@ -132,7 +134,7 @@ export const CorridorScene: React.FC<CorridorSceneProps> = ({
 
         {/* 3. INDIVIDUAL 3D ROOMS */}
         {currentScene === 'gallery' && (
-          <GalleryRoom onSelectProject={onSelectProject} />
+          <GalleryRoom onSelectProject={onSelectProject} artCritic={artCritic} />
         )}
         {currentScene === 'studio' && (
           <StudioRoom onSelectTV={onSelectTV} />
