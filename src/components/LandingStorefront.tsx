@@ -733,19 +733,19 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     // Trunk base at center bottom (x=512, y=1024)
     ctx.beginPath();
     ctx.moveTo(460, 1024);
-    ctx.quadraticCurveTo(430, 600, 480, 500); // left trunk edge
-    ctx.lineTo(544, 500); // right trunk edge
-    ctx.quadraticCurveTo(594, 600, 564, 1024);
+    ctx.bezierCurveTo(420, 820, 490, 680, 475, 500); // left trunk edge curves organically
+    ctx.lineTo(535, 500); // right trunk edge
+    ctx.bezierCurveTo(550, 680, 480, 820, 520, 1024);
     ctx.fill();
     ctx.stroke();
 
     // Wood texture lines on trunk
     ctx.strokeStyle = 'rgba(0,0,0,0.15)';
     ctx.lineWidth = 3;
-    for (let tx = 480; tx < 550; tx += 20) {
+    for (let tx = 480; tx < 540; tx += 20) {
       ctx.beginPath();
       ctx.moveTo(tx, 1024);
-      ctx.quadraticCurveTo(tx - 30, 750, tx, 500);
+      ctx.quadraticCurveTo(tx - 30, 750, tx - 15, 500);
       ctx.stroke();
     }
     ctx.strokeStyle = '#1a1a1a';
@@ -754,26 +754,35 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     // Branches going out
     // Branch Left
     ctx.beginPath();
-    ctx.moveTo(480, 520);
-    ctx.quadraticCurveTo(340, 420, 300, 320);
-    ctx.lineTo(350, 310);
-    ctx.quadraticCurveTo(375, 380, 495, 480);
+    ctx.moveTo(475, 510);
+    ctx.quadraticCurveTo(340, 430, 270, 340); // branch left curves
+    ctx.lineTo(315, 325);
+    ctx.quadraticCurveTo(375, 390, 495, 480);
     ctx.fill();
     ctx.stroke();
     
     // Branch Right
     ctx.beginPath();
-    ctx.moveTo(540, 510);
-    ctx.quadraticCurveTo(680, 410, 720, 300);
-    ctx.lineTo(670, 295);
-    ctx.quadraticCurveTo(640, 370, 520, 470);
+    ctx.moveTo(535, 505);
+    ctx.quadraticCurveTo(680, 410, 750, 315); // branch right curves
+    ctx.lineTo(710, 305);
+    ctx.quadraticCurveTo(640, 380, 520, 470);
+    ctx.fill();
+    ctx.stroke();
+
+    // Middle branch
+    ctx.beginPath();
+    ctx.moveTo(495, 495);
+    ctx.quadraticCurveTo(512, 420, 500, 350);
+    ctx.lineTo(525, 350);
+    ctx.quadraticCurveTo(535, 420, 515, 495);
     ctx.fill();
     ctx.stroke();
 
     // Secondary small branch for hanging mouse
     ctx.beginPath();
-    ctx.moveTo(380, 370);
-    ctx.quadraticCurveTo(360, 410, 350, 440);
+    ctx.moveTo(350, 390);
+    ctx.quadraticCurveTo(330, 430, 320, 460);
     ctx.stroke();
 
     // Detailed leaf cluster drawer
@@ -787,46 +796,48 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
       // Draw sub-arcs on perimeter
       ctx.strokeStyle = '#1a1a1a';
       ctx.lineWidth = 5;
-      const steps = 14;
+      const steps = 15;
       for (let i = 0; i <= steps; i++) {
         const angle = (i / steps) * Math.PI * 2;
         const arcX = cx + Math.cos(angle) * r;
         const arcY = cy + Math.sin(angle) * r;
         ctx.beginPath();
-        ctx.arc(arcX, arcY, 24, angle - Math.PI/2, angle + Math.PI/2);
+        ctx.arc(arcX, arcY, 22, angle - Math.PI/2, angle + Math.PI/2);
         ctx.stroke();
       }
       
       // Interior texture curves
       ctx.strokeStyle = 'rgba(0,0,0,0.18)';
-      ctx.lineWidth = 3;
-      for (let k = 0; k < 6; k++) {
-        const ix = cx + (Math.random() - 0.5) * (r * 0.9);
-        const iy = cy + (Math.random() - 0.5) * (r * 0.9);
-        const ir = 30 + Math.random() * 30;
+      ctx.lineWidth = 2.5;
+      for (let k = 0; k < 8; k++) {
+        const ix = cx + (Math.random() - 0.5) * (r * 1.1);
+        const iy = cy + (Math.random() - 0.5) * (r * 1.1);
+        const ir = 20 + Math.random() * 25;
         ctx.beginPath();
-        ctx.arc(ix, iy, ir, 0.3, Math.PI * 0.85);
+        ctx.arc(ix, iy, ir, 0.4, Math.PI * 0.9);
         ctx.stroke();
       }
     };
 
     // Draw leafy clusters (centered and padded, no clipping!)
-    drawLeafCluster(360, 300, 140);
-    drawLeafCluster(660, 280, 140);
-    drawLeafCluster(512, 190, 160);
-    drawLeafCluster(512, 340, 120);
+    drawLeafCluster(320, 310, 130);
+    drawLeafCluster(700, 290, 130);
+    drawLeafCluster(512, 190, 150);
+    drawLeafCluster(390, 200, 120);
+    drawLeafCluster(620, 200, 120);
+    drawLeafCluster(512, 340, 110);
 
     // Hanging Mouse wire cord
     ctx.strokeStyle = '#1a1a1a';
     ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.moveTo(350, 440);
-    ctx.bezierCurveTo(370, 480, 310, 550, 340, 680);
+    ctx.moveTo(320, 460);
+    ctx.bezierCurveTo(340, 500, 280, 570, 310, 700);
     ctx.stroke();
 
     // Mouse body
     ctx.save();
-    ctx.translate(340, 715);
+    ctx.translate(310, 735);
     ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
     ctx.shadowBlur = 8;
     ctx.shadowOffsetY = 5;
