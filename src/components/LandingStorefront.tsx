@@ -14,74 +14,57 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
   const openProgress = useRef(0);
   const transitionTriggered = useRef(false);
 
-  // 1. Brick wall hand-drawn texture with detailed hatching
-  const wallTexture = useMemo(() => {
+  // 1. Repeating Brick Wall Texture (512x256, seamless running bond)
+  const brickTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 1024;
-    canvas.height = 512;
+    canvas.width = 512;
+    canvas.height = 256;
     const ctx = canvas.getContext('2d');
     if (!ctx) return new THREE.Texture();
 
     // Base wall color (light grey paper tone)
     ctx.fillStyle = '#faf8f5';
-    ctx.fillRect(0, 0, 1024, 512);
+    ctx.fillRect(0, 0, 512, 256);
 
-    // Draw brick pattern
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.42)'; // Thinner pencil style line color
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)'; // sketchy charcoal line color
     ctx.lineWidth = 1.3;
-    const rows = 14;
-    const cols = 16;
-    const rowHeight = 512 / rows;
-    const colWidth = 1024 / cols;
 
-    // Helper to draw sketchy lines
-    const drawSketchyLine = (x1: number, y1: number, x2: number, y2: number) => {
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      const mx = (x1 + x2) / 2 + (Math.random() - 0.5) * 1.5;
-      const my = (y1 + y2) / 2 + (Math.random() - 0.5) * 1.5;
-      ctx.lineTo(mx, my);
-      ctx.lineTo(x2 + (Math.random() - 0.5) * 0.5, y2 + (Math.random() - 0.5) * 0.5);
-      ctx.stroke();
-    };
-
-    // Draw horizontal brick lines
-    for (let r = 0; r <= rows; r++) {
-      const y = r * rowHeight;
+    // Draw horizontal brick lines (align at borders for seamless wrap)
+    for (let y = 0; y <= 256; y += 64) {
       ctx.beginPath();
       ctx.moveTo(0, y);
-      for (let x = 64; x <= 1024; x += 64) {
-        ctx.lineTo(x, y + (Math.random() - 0.5) * 1.5);
+      for (let x = 16; x <= 512; x += 16) {
+        ctx.lineTo(x, y + (Math.random() - 0.5) * 1.0);
       }
       ctx.stroke();
     }
 
-    // Draw vertical brick joints & add brick hatching
-    for (let r = 0; r < rows; r++) {
-      const y = r * rowHeight;
-      const offset = (r % 2) * (colWidth / 2);
-      for (let c = 0; c <= cols + 1; c++) {
-        const x = c * colWidth - offset;
-        drawSketchyLine(x, y, x, y + rowHeight);
+    // Draw vertical brick joints (offset per row for running bond)
+    for (let r = 0; r < 4; r++) {
+      const yStart = r * 64;
+      const yEnd = yStart + 64;
+      const isOffset = r % 2 === 1;
+      
+      for (let c = 0; c < 4; c++) {
+        const x = c * 128 + (isOffset ? 64 : 0);
+        ctx.beginPath();
+        ctx.moveTo(x, yStart);
+        ctx.lineTo(x + (Math.random() - 0.5) * 1.0, yEnd);
+        ctx.stroke();
         
-        // Randomly hatch this brick
-        if (Math.random() < 0.25) {
-          const bx = x;
-          const by = y;
-          const bw = colWidth;
-          const bh = rowHeight;
-          
+        // Random brick hatching
+        if (Math.random() < 0.22) {
           ctx.save();
           ctx.beginPath();
-          ctx.rect(bx + 4, by + 4, bw - 8, bh - 8);
+          ctx.rect(x + 4, yStart + 4, 120, 56);
           ctx.clip();
           
           ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
-          ctx.lineWidth = 1;
-          for (let k = -20; k < bw + bh; k += 8) {
+          ctx.lineWidth = 0.8;
+          for (let k = -20; k < 180; k += 8) {
             ctx.beginPath();
-            ctx.moveTo(bx + k, by);
-            ctx.lineTo(bx + k - bh, by + bh);
+            ctx.moveTo(x + k, yStart);
+            ctx.lineTo(x + k - 64, yEnd);
             ctx.stroke();
           }
           ctx.restore();
@@ -89,58 +72,126 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
       }
     }
 
-    // Window illustration (right side)
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(8, 2.5); // covers the wide wall seamlessly
+    return texture;
+  }, []);
+
+  // 2. PORTFOLIO Wooden Sign Texture (512x128)
+  const signTexture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return new THREE.Texture();
+
+    ctx.fillStyle = 'rgba(0,0,0,0)';
+    ctx.fillRect(0, 0, 512, 128);
+
+    // Support bar
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(40, 20);
+    ctx.lineTo(472, 20);
+    ctx.stroke();
+    
+    // Support ropes/chains
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(120, 20);
+    ctx.lineTo(120, 50);
+    ctx.moveTo(392, 20);
+    ctx.lineTo(392, 50);
+    ctx.stroke();
+
+    // Plank sign board
+    ctx.fillStyle = '#d8a773'; // wooden color
+    ctx.fillRect(80, 50, 352, 68);
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 4.5;
+    ctx.strokeRect(80, 50, 352, 68);
+    
+    // Wood grain lines
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    ctx.lineWidth = 1.5;
+    for (let sy = 60; sy < 110; sy += 12) {
+      ctx.beginPath();
+      ctx.moveTo(80, sy);
+      ctx.quadraticCurveTo(256, sy + (Math.random() - 0.5) * 6, 432, sy);
+      ctx.stroke();
+    }
+
+    // Sign text "PORTFOLIO"
+    ctx.fillStyle = '#1a1a1a';
+    ctx.font = 'bold 32px "Gloria Hallelujah", cursive';
+    ctx.textAlign = 'center';
+    ctx.fillText('PORTFOLIO', 256, 95);
+
+    return new THREE.CanvasTexture(canvas);
+  }, []);
+
+  // 3. Window & Succulents Planter Texture (512x512)
+  const windowTexture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return new THREE.Texture();
+
+    ctx.fillStyle = 'rgba(0,0,0,0)';
+    ctx.fillRect(0, 0, 512, 512);
+
+    // Window frame
     ctx.strokeStyle = '#1a1a1a';
     ctx.lineWidth = 5.5;
     ctx.fillStyle = '#faf8f5';
-    // Clear bricks behind window
-    ctx.fillRect(650, 120, 260, 220);
-    // Window outer frame
-    ctx.strokeRect(650, 120, 260, 220);
+    ctx.fillRect(100, 40, 312, 260);
+    ctx.strokeRect(100, 40, 312, 260);
+    
     // Window panes
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(780, 120);
-    ctx.lineTo(780, 340);
-    ctx.moveTo(650, 230);
-    ctx.lineTo(910, 230);
+    ctx.moveTo(256, 40);
+    ctx.lineTo(256, 300);
+    ctx.moveTo(100, 170);
+    ctx.lineTo(412, 170);
     ctx.stroke();
 
-    // Plant box planter below window
-    ctx.fillStyle = '#d8a773'; // warm wooden color
-    ctx.fillRect(630, 340, 300, 70); // y = 340 (closes the gap!)
+    // Plant box planter box
+    ctx.fillStyle = '#d8a773'; // matching wooden color
+    ctx.fillRect(70, 300, 372, 80); // directly aligns with window bottom (no gap!)
     ctx.strokeStyle = '#1a1a1a';
     ctx.lineWidth = 4;
-    ctx.strokeRect(630, 340, 300, 70);
+    ctx.strokeRect(70, 300, 372, 80);
     
-    // Draw wood grain lines on the planter
+    // Wood grain lines
     ctx.strokeStyle = 'rgba(0,0,0,0.15)';
     ctx.lineWidth = 1.5;
-    for (let py = 350; py < 410; py += 15) {
+    for (let py = 315; py < 370; py += 15) {
       ctx.beginPath();
-      ctx.moveTo(630, py);
-      ctx.lineTo(930, py + (Math.random() - 0.5) * 2);
+      ctx.moveTo(70, py);
+      ctx.lineTo(442, py + (Math.random() - 0.5) * 2);
       ctx.stroke();
     }
     
-    // Draw rubber ducky in the center of planter
+    // Rubber Ducky (x = 256, y = 295)
     ctx.save();
-    ctx.translate(780, 332);
+    ctx.translate(256, 290);
     ctx.fillStyle = '#fbe15c'; // yellow
     ctx.strokeStyle = '#1a1a1a';
     ctx.lineWidth = 2.2;
-    // duck body
     ctx.beginPath();
     ctx.ellipse(0, 10, 16, 12, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    // duck head
     ctx.beginPath();
     ctx.arc(-8, -4, 9, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    // duck bill
-    ctx.fillStyle = '#f67e22'; // orange
+    ctx.fillStyle = '#f67e22'; // orange beak
     ctx.beginPath();
     ctx.moveTo(-17, -6);
     ctx.lineTo(-24, -3);
@@ -148,15 +199,14 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
-    // duck eye
-    ctx.fillStyle = '#1a1a1a';
+    ctx.fillStyle = '#1a1a1a'; // eye
     ctx.beginPath();
     ctx.arc(-10, -6, 1.5, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
-    // Draw succulents on the left and right sides
-    // Saguaro cactus (left side, x = 675, y = 295)
+    // Cacti / Succulents
+    // Saguaro cactus (left side, x = 125, y = 250)
     const drawSaguaro = (x: number, y: number) => {
       ctx.strokeStyle = '#1a1a1a';
       ctx.fillStyle = '#faf8f5';
@@ -189,9 +239,9 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
         ctx.fillRect(x + 7, sy, 2, 2);
       }
     };
-    drawSaguaro(675, 295);
+    drawSaguaro(135, 250);
 
-    // Prickly pear cactus (x = 725, y = 295)
+    // Prickly pear cactus (x = 190, y = 250)
     const drawPricklyPear = (x: number, y: number) => {
       ctx.strokeStyle = '#1a1a1a';
       ctx.fillStyle = '#faf8f5';
@@ -212,7 +262,7 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
       ctx.fill();
       ctx.stroke();
     };
-    drawPricklyPear(725, 295);
+    drawPricklyPear(195, 250);
 
     // Rosette Succulents (right side)
     const drawRosette = (x: number, y: number, r: number) => {
@@ -236,83 +286,42 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
       }
       ctx.restore();
     };
-    drawRosette(845, 325, 20);
-    drawRosette(890, 322, 22);
-
-    // Wooden "PORTFOLIO" sign plank
-    // Support bar
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(350, 35);
-    ctx.lineTo(670, 35);
-    ctx.stroke();
-    
-    // Support ropes/chains
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(420, 35);
-    ctx.lineTo(420, 60);
-    ctx.moveTo(604, 35);
-    ctx.lineTo(604, 60);
-    ctx.stroke();
-
-    // Plank sign board
-    ctx.fillStyle = '#d8a773'; // matching wooden color
-    ctx.fillRect(362, 60, 300, 75);
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 4.5;
-    ctx.strokeRect(362, 60, 300, 75);
-    
-    // wood grain lines
-    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-    ctx.lineWidth = 1.5;
-    for (let sy = 70; sy < 130; sy += 15) {
-      ctx.beginPath();
-      ctx.moveTo(362, sy);
-      ctx.quadraticCurveTo(512, sy + (Math.random() - 0.5) * 8, 662, sy);
-      ctx.stroke();
-    }
-
-    // Sign text "PORTFOLIO"
-    ctx.fillStyle = '#1a1a1a';
-    ctx.font = 'bold 36px "Gloria Hallelujah", cursive';
-    ctx.textAlign = 'center';
-    ctx.fillText('PORTFOLIO', 512, 110);
+    drawRosette(335, 285, 20);
+    drawRosette(380, 282, 22);
 
     return new THREE.CanvasTexture(canvas);
   }, []);
 
-  // 2. Left Door hand-drawn texture (with detailed warm wood grain & badges)
+  // 4. Left Door Texture (512x1280 - perfect 1:2.5 ratio, Wood Grain + Badges)
   const leftDoorTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
-    canvas.height = 1024;
+    canvas.height = 1280;
     const ctx = canvas.getContext('2d');
     if (!ctx) return new THREE.Texture();
 
     // Wood base gradient
-    const grad = ctx.createLinearGradient(0, 0, 512, 1024);
+    const grad = ctx.createLinearGradient(0, 0, 512, 1280);
     grad.addColorStop(0, '#d8a773');
     grad.addColorStop(1, '#b08154');
     ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 512, 1024);
+    ctx.fillRect(0, 0, 512, 1280);
 
     // Door border & panels
     ctx.strokeStyle = '#1a1a1a';
     ctx.lineWidth = 10;
-    ctx.strokeRect(10, 10, 492, 1004);
+    ctx.strokeRect(10, 10, 492, 1260);
 
-    // Horizontal panels lines (two columns of panels)
+    // Beveled panels lines
     ctx.lineWidth = 6;
-    ctx.strokeRect(30, 40, 210, 280);
-    ctx.strokeRect(272, 40, 210, 280);
+    ctx.strokeRect(30, 40, 210, 360);
+    ctx.strokeRect(272, 40, 210, 360);
     
-    ctx.strokeRect(30, 360, 210, 300);
-    ctx.strokeRect(272, 360, 210, 300);
+    ctx.strokeRect(30, 460, 210, 380);
+    ctx.strokeRect(272, 460, 210, 380);
 
-    ctx.strokeRect(30, 700, 210, 280);
-    ctx.strokeRect(272, 700, 210, 280);
+    ctx.strokeRect(30, 880, 210, 360);
+    ctx.strokeRect(272, 880, 210, 360);
 
     // Wood grain lines
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
@@ -320,11 +329,10 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     for (let wx = 20; wx < 500; wx += 40) {
       ctx.beginPath();
       ctx.moveTo(wx, 10);
-      ctx.bezierCurveTo(wx + (Math.random() - 0.5) * 30, 300, wx + (Math.random() - 0.5) * 30, 700, wx, 1014);
+      ctx.bezierCurveTo(wx + (Math.random() - 0.5) * 30, 400, wx + (Math.random() - 0.5) * 30, 900, wx, 1270);
       ctx.stroke();
     }
 
-    // Helper to setup shadow for stickers
     const setStickerShadow = () => {
       ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
       ctx.shadowBlur = 8;
@@ -339,141 +347,92 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
       ctx.shadowOffsetY = 0;
     };
 
-    // --- HTML5 Shield Badge ---
+    // --- HTML5 Badge ---
     ctx.save();
-    ctx.translate(130, 180);
+    ctx.translate(130, 220);
     ctx.rotate(-0.08);
     setStickerShadow();
-    
-    // Die-cut backing
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.moveTo(0, -66);
-    ctx.lineTo(54, -46);
-    ctx.lineTo(44, 46);
-    ctx.lineTo(0, 66);
-    ctx.lineTo(-44, 46);
-    ctx.lineTo(-54, -46);
-    ctx.closePath();
+    ctx.moveTo(0, -66); ctx.lineTo(54, -46); ctx.lineTo(44, 46); ctx.lineTo(0, 66); ctx.lineTo(-44, 46); ctx.lineTo(-54, -46); ctx.closePath();
     ctx.fill();
-    
     resetShadow();
-    ctx.fillStyle = '#e34f26'; // HTML5 orange
+    ctx.fillStyle = '#e34f26';
     ctx.beginPath();
-    ctx.moveTo(0, -60);
-    ctx.lineTo(48, -42);
-    ctx.lineTo(38, 40);
-    ctx.lineTo(0, 60);
-    ctx.lineTo(-38, 40);
-    ctx.lineTo(-48, -42);
-    ctx.closePath();
+    ctx.moveTo(0, -60); ctx.lineTo(48, -42); ctx.lineTo(38, 40); ctx.lineTo(0, 60); ctx.lineTo(-38, 40); ctx.lineTo(-48, -42); ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-    
-    // "5" logo
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 55px "Inter", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('5', 0, 20);
-    
-    ctx.fillStyle = '#1a1a1a';
-    ctx.font = 'bold 16px "Gloria Hallelujah", cursive';
-    ctx.fillText('HTML', 0, 48);
+    ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 4; ctx.stroke();
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 55px "Inter", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('5', 0, 20);
+    ctx.fillStyle = '#1a1a1a'; ctx.font = 'bold 16px "Gloria Hallelujah", cursive'; ctx.fillText('HTML', 0, 48);
     ctx.restore();
 
-    // --- JS Circle Badge ---
+    // --- JS Badge ---
     ctx.save();
-    ctx.translate(130, 480);
+    ctx.translate(130, 620);
     ctx.rotate(0.05);
     setStickerShadow();
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(0, 0, 58, 0, Math.PI * 2);
-    ctx.fill();
-    
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, 58, 0, Math.PI * 2); ctx.fill();
     resetShadow();
-    ctx.fillStyle = '#f7df1e'; // JS yellow
-    ctx.beginPath();
-    ctx.arc(0, 0, 52, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-    
-    ctx.fillStyle = '#1a1a1a';
-    ctx.font = 'bold 44px "Inter", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('JS', 0, 15);
+    ctx.fillStyle = '#f7df1e'; ctx.beginPath(); ctx.arc(0, 0, 52, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 4; ctx.stroke();
+    ctx.fillStyle = '#1a1a1a'; ctx.font = 'bold 44px "Inter", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('JS', 0, 15);
     ctx.restore();
 
-    // --- TS Hexagon Badge ---
+    // --- TS Hex Badge ---
     ctx.save();
-    ctx.translate(140, 780);
+    ctx.translate(140, 1020);
     ctx.rotate(-0.1);
     setStickerShadow();
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
+    ctx.fillStyle = '#ffffff'; ctx.beginPath();
     for (let i = 0; i < 6; i++) {
       const angle = (i / 6) * Math.PI * 2;
       ctx.lineTo(Math.cos(angle) * 62, Math.sin(angle) * 62);
     }
-    ctx.closePath();
-    ctx.fill();
-    
+    ctx.closePath(); ctx.fill();
     resetShadow();
-    ctx.fillStyle = '#3178c6'; // TS blue
-    ctx.beginPath();
+    ctx.fillStyle = '#3178c6'; ctx.beginPath();
     for (let i = 0; i < 6; i++) {
       const angle = (i / 6) * Math.PI * 2;
       ctx.lineTo(Math.cos(angle) * 54, Math.sin(angle) * 54);
     }
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-    
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 36px "Inter", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('TS', 0, 12);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 4; ctx.stroke();
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 36px "Inter", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('TS', 0, 12);
     ctx.restore();
 
     return new THREE.CanvasTexture(canvas);
   }, []);
 
-  // 3. Right Door hand-drawn texture (with tech sticky notes & handles)
+  // 5. Right Door Texture (512x1280 - perfect 1:2.5 ratio, Wood Grain + Badges + Handles)
   const rightDoorTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
-    canvas.height = 1024;
+    canvas.height = 1280;
     const ctx = canvas.getContext('2d');
     if (!ctx) return new THREE.Texture();
 
     // Wood base gradient
-    const grad = ctx.createLinearGradient(0, 0, 512, 1024);
+    const grad = ctx.createLinearGradient(0, 0, 512, 1280);
     grad.addColorStop(0, '#d8a773');
     grad.addColorStop(1, '#b08154');
     ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 512, 1024);
+    ctx.fillRect(0, 0, 512, 1280);
 
     // Door border & panels
     ctx.strokeStyle = '#1a1a1a';
     ctx.lineWidth = 10;
-    ctx.strokeRect(10, 10, 492, 1004);
+    ctx.strokeRect(10, 10, 492, 1260);
 
-    // Horizontal panels lines (two columns of panels)
+    // Beveled panels lines
     ctx.lineWidth = 6;
-    ctx.strokeRect(30, 40, 210, 280);
-    ctx.strokeRect(272, 40, 210, 280);
+    ctx.strokeRect(30, 40, 210, 360);
+    ctx.strokeRect(272, 40, 210, 360);
     
-    ctx.strokeRect(30, 360, 210, 300);
-    ctx.strokeRect(272, 360, 210, 300);
+    ctx.strokeRect(30, 460, 210, 380);
+    ctx.strokeRect(272, 460, 210, 380);
 
-    ctx.strokeRect(30, 700, 210, 280);
-    ctx.strokeRect(272, 700, 210, 280);
+    ctx.strokeRect(30, 880, 210, 360);
+    ctx.strokeRect(272, 880, 210, 360);
 
     // Wood grain lines
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
@@ -481,11 +440,10 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     for (let wx = 20; wx < 500; wx += 40) {
       ctx.beginPath();
       ctx.moveTo(wx, 10);
-      ctx.bezierCurveTo(wx + (Math.random() - 0.5) * 30, 300, wx + (Math.random() - 0.5) * 30, 700, wx, 1014);
+      ctx.bezierCurveTo(wx + (Math.random() - 0.5) * 30, 400, wx + (Math.random() - 0.5) * 30, 900, wx, 1270);
       ctx.stroke();
     }
 
-    // Helper to setup shadow for stickers
     const setStickerShadow = () => {
       ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
       ctx.shadowBlur = 8;
@@ -502,126 +460,60 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
 
     // --- React Badge ---
     ctx.save();
-    ctx.translate(360, 190);
+    ctx.translate(360, 220);
     ctx.rotate(0.08);
     setStickerShadow();
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(0, 0, 56, 0, Math.PI * 2);
-    ctx.fill();
-    
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, 56, 0, Math.PI * 2); ctx.fill();
     resetShadow();
-    ctx.fillStyle = '#20232a'; // React dark theme
-    ctx.beginPath();
-    ctx.arc(0, 0, 50, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-    
-    ctx.strokeStyle = '#61dafb'; // React light blue
-    ctx.lineWidth = 2.5;
-    ctx.save();
-    ctx.scale(1, 0.35);
-    ctx.beginPath(); ctx.arc(0, 0, 36, 0, Math.PI * 2); ctx.stroke();
-    ctx.restore();
-    ctx.save();
-    ctx.rotate(Math.PI / 3);
-    ctx.scale(1, 0.35);
-    ctx.beginPath(); ctx.arc(0, 0, 36, 0, Math.PI * 2); ctx.stroke();
-    ctx.restore();
-    ctx.save();
-    ctx.rotate(-Math.PI / 3);
-    ctx.scale(1, 0.35);
-    ctx.beginPath(); ctx.arc(0, 0, 36, 0, Math.PI * 2); ctx.stroke();
-    ctx.restore();
-    ctx.fillStyle = '#61dafb';
-    ctx.beginPath();
-    ctx.arc(0, 0, 6, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillStyle = '#20232a'; ctx.beginPath(); ctx.arc(0, 0, 50, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 4; ctx.stroke();
+    ctx.strokeStyle = '#61dafb'; ctx.lineWidth = 2.5;
+    ctx.save(); ctx.scale(1, 0.35); ctx.beginPath(); ctx.arc(0, 0, 36, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    ctx.save(); ctx.rotate(Math.PI / 3); ctx.scale(1, 0.35); ctx.beginPath(); ctx.arc(0, 0, 36, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    ctx.save(); ctx.rotate(-Math.PI / 3); ctx.scale(1, 0.35); ctx.beginPath(); ctx.arc(0, 0, 36, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    ctx.fillStyle = '#61dafb'; ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 
     // --- Node.js Badge ---
     ctx.save();
-    ctx.translate(350, 480);
+    ctx.translate(350, 620);
     ctx.rotate(-0.06);
     setStickerShadow();
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.roundRect ? ctx.roundRect(-60, -38, 120, 76, 12) : ctx.rect(-60, -38, 120, 76);
-    ctx.fill();
-    
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-60, -38, 120, 76, 12) : ctx.rect(-60, -38, 120, 76); ctx.fill();
     resetShadow();
-    ctx.fillStyle = '#339933'; // node green
-    ctx.beginPath();
-    ctx.roundRect ? ctx.roundRect(-54, -32, 108, 64, 8) : ctx.rect(-54, -32, 108, 64);
-    ctx.fill();
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-    
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 22px "Inter", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('node.js', 0, 8);
+    ctx.fillStyle = '#339933'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-54, -32, 108, 64, 8) : ctx.rect(-54, -32, 108, 64); ctx.fill();
+    ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 4; ctx.stroke();
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 22px "Inter", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('node.js', 0, 8);
     ctx.restore();
 
-    // --- CSS3 Shield Badge ---
+    // --- CSS3 Badge ---
     ctx.save();
-    ctx.translate(350, 780);
+    ctx.translate(350, 1020);
     ctx.rotate(0.12);
     setStickerShadow();
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.moveTo(0, -66);
-    ctx.lineTo(54, -46);
-    ctx.lineTo(44, 46);
-    ctx.lineTo(0, 66);
-    ctx.lineTo(-44, 46);
-    ctx.lineTo(-54, -46);
-    ctx.closePath();
-    ctx.fill();
-    
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(0, -66); ctx.lineTo(54, -46); ctx.lineTo(44, 46); ctx.lineTo(0, 66); ctx.lineTo(-44, 46); ctx.lineTo(-54, -46); ctx.closePath(); ctx.fill();
     resetShadow();
-    ctx.fillStyle = '#1572b6'; // CSS3 blue
-    ctx.beginPath();
-    ctx.moveTo(0, -60);
-    ctx.lineTo(48, -42);
-    ctx.lineTo(38, 40);
-    ctx.lineTo(0, 60);
-    ctx.lineTo(-38, 40);
-    ctx.lineTo(-48, -42);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-    
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 55px "Inter", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('3', 0, 20);
-    
-    ctx.fillStyle = '#1a1a1a';
-    ctx.font = 'bold 16px "Gloria Hallelujah", cursive';
-    ctx.fillText('CSS', 0, 48);
+    ctx.fillStyle = '#1572b6'; ctx.beginPath(); ctx.moveTo(0, -60); ctx.lineTo(48, -42); ctx.lineTo(38, 40); ctx.lineTo(0, 60); ctx.lineTo(-38, 40); ctx.lineTo(-48, -42); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 4; ctx.stroke();
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 55px "Inter", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('3', 0, 20);
+    ctx.fillStyle = '#1a1a1a'; ctx.font = 'bold 16px "Gloria Hallelujah", cursive'; ctx.fillText('CSS', 0, 48);
     ctx.restore();
 
-    // Brass handles at center-left edge of right door
+    // Brass handles
     ctx.fillStyle = '#e4c042';
     ctx.strokeStyle = '#1a1a1a';
     ctx.lineWidth = 3.5;
     ctx.beginPath();
-    ctx.arc(15, 512, 14, 0, Math.PI * 2);
+    ctx.arc(15, 640, 14, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    ctx.fillRect(8, 512, 6, 45);
-    ctx.strokeRect(8, 512, 6, 45);
+    ctx.fillRect(8, 640, 6, 45);
+    ctx.strokeRect(8, 640, 6, 45);
 
     return new THREE.CanvasTexture(canvas);
   }, []);
 
-  // 4. Cartoon Cat on the path
+  // 6. Cartoon Cat on the path (256x256)
   const catTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 256;
@@ -715,7 +607,7 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     return new THREE.CanvasTexture(canvas);
   }, []);
 
-  // 5. Tree illustration with organic branches and foliage (1:1 ratio canvas, padded to prevent clipping)
+  // 7. Tree & Hanging Mouse Texture (1024x1024 - centered, no border clipping)
   const treeTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 1024;
@@ -730,16 +622,16 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     ctx.lineWidth = 6;
     ctx.fillStyle = '#faf8f5';
 
-    // Trunk base at center bottom (x=512, y=1024)
+    // Trunk
     ctx.beginPath();
     ctx.moveTo(460, 1024);
-    ctx.bezierCurveTo(420, 820, 490, 680, 475, 500); // left trunk edge curves organically
-    ctx.lineTo(535, 500); // right trunk edge
+    ctx.bezierCurveTo(420, 820, 490, 680, 475, 500); // organic S-curves
+    ctx.lineTo(535, 500);
     ctx.bezierCurveTo(550, 680, 480, 820, 520, 1024);
     ctx.fill();
     ctx.stroke();
 
-    // Wood texture lines on trunk
+    // Trunk wood texture lines
     ctx.strokeStyle = 'rgba(0,0,0,0.15)';
     ctx.lineWidth = 3;
     for (let tx = 480; tx < 540; tx += 20) {
@@ -751,26 +643,26 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     ctx.strokeStyle = '#1a1a1a';
     ctx.lineWidth = 6;
 
-    // Branches going out
-    // Branch Left
+    // Branches
+    // Left Branch
     ctx.beginPath();
     ctx.moveTo(475, 510);
-    ctx.quadraticCurveTo(340, 430, 270, 340); // branch left curves
+    ctx.quadraticCurveTo(340, 430, 270, 340);
     ctx.lineTo(315, 325);
     ctx.quadraticCurveTo(375, 390, 495, 480);
     ctx.fill();
     ctx.stroke();
     
-    // Branch Right
+    // Right Branch
     ctx.beginPath();
     ctx.moveTo(535, 505);
-    ctx.quadraticCurveTo(680, 410, 750, 315); // branch right curves
+    ctx.quadraticCurveTo(680, 410, 750, 315);
     ctx.lineTo(710, 305);
     ctx.quadraticCurveTo(640, 380, 520, 470);
     ctx.fill();
     ctx.stroke();
 
-    // Middle branch
+    // Middle Branch
     ctx.beginPath();
     ctx.moveTo(495, 495);
     ctx.quadraticCurveTo(512, 420, 500, 350);
@@ -779,13 +671,13 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     ctx.fill();
     ctx.stroke();
 
-    // Secondary small branch for hanging mouse
+    // Secondary hanging mouse branch
     ctx.beginPath();
     ctx.moveTo(350, 390);
     ctx.quadraticCurveTo(330, 430, 320, 460);
     ctx.stroke();
 
-    // Detailed leaf cluster drawer
+    // Leaf cluster outlines with perimeter arcs & sketchy hatching
     const drawLeafCluster = (cx: number, cy: number, r: number) => {
       ctx.fillStyle = '#faf8f5';
       ctx.beginPath();
@@ -793,7 +685,6 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
       ctx.fill();
       ctx.stroke();
       
-      // Draw sub-arcs on perimeter
       ctx.strokeStyle = '#1a1a1a';
       ctx.lineWidth = 5;
       const steps = 15;
@@ -806,7 +697,7 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
         ctx.stroke();
       }
       
-      // Interior texture curves
+      // Interior sketch shading
       ctx.strokeStyle = 'rgba(0,0,0,0.18)';
       ctx.lineWidth = 2.5;
       for (let k = 0; k < 8; k++) {
@@ -819,7 +710,6 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
       }
     };
 
-    // Draw leafy clusters (centered and padded, no clipping!)
     drawLeafCluster(320, 310, 130);
     drawLeafCluster(700, 290, 130);
     drawLeafCluster(512, 190, 150);
@@ -827,7 +717,7 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     drawLeafCluster(620, 200, 120);
     drawLeafCluster(512, 340, 110);
 
-    // Hanging Mouse wire cord
+    // Hanging Mouse cord
     ctx.strokeStyle = '#1a1a1a';
     ctx.lineWidth = 4;
     ctx.beginPath();
@@ -865,7 +755,7 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     return new THREE.CanvasTexture(canvas);
   }, []);
 
-  // 6. Cobblestone pathway ground floor texture
+  // 8. Ground Cobblestone Texture (1024x512)
   const floorTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 1024;
@@ -908,7 +798,7 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
       }
     }
 
-    // Grass / weed tufts
+    // Grass weed tufts
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.lineWidth = 2;
     const drawTuft = (tx: number, ty: number) => {
@@ -922,7 +812,7 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
       ctx.stroke();
     };
 
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 20; i++) {
       const lx = 50 + Math.random() * 280;
       const ly = 20 + Math.random() * 470;
       drawTuft(lx, ly);
@@ -954,56 +844,68 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
 
   return (
     <group position={[0, 0, 0]}>
-      {/* 1. Main storefront wall */}
-      <mesh position={[0, 0, -2]}>
-        <planeGeometry args={[12, 6]} />
-        <meshBasicMaterial map={wallTexture} side={THREE.DoubleSide} />
+      {/* 1. Seamless repeating brick wall in the background */}
+      <mesh position={[0, 1.0, -2.2]}>
+        <planeGeometry args={[30, 8]} />
+        <meshBasicMaterial map={brickTexture} side={THREE.DoubleSide} />
       </mesh>
 
-      {/* 2. Interactive Doors (Left & Right Hinge Groups) */}
+      {/* 2. Interactive double doors (Slender and exactly centered) */}
       {/* Left Hinge Group */}
-      <group ref={leftHingeRef} position={[-1.5, -0.6, -1.95]}>
+      <group ref={leftHingeRef} position={[-1.2, -0.6, -2.0]}>
         <mesh 
-          position={[0.75, 0, 0]} 
+          position={[0.6, 0, 0]} 
           onClick={(e) => {
             e.stopPropagation();
             setIsOpen(true);
           }}
         >
-          <planeGeometry args={[1.5, 3.2]} />
+          <planeGeometry args={[1.2, 3.0]} />
           <meshBasicMaterial map={leftDoorTexture} side={THREE.DoubleSide} />
         </mesh>
       </group>
 
       {/* Right Hinge Group */}
-      <group ref={rightHingeRef} position={[1.5, -0.6, -1.95]}>
+      <group ref={rightHingeRef} position={[1.2, -0.6, -2.0]}>
         <mesh 
-          position={[-0.75, 0, 0]}
+          position={[-0.6, 0, 0]}
           onClick={(e) => {
             e.stopPropagation();
             setIsOpen(true);
           }}
         >
-          <planeGeometry args={[1.5, 3.2]} />
+          <planeGeometry args={[1.2, 3.0]} />
           <meshBasicMaterial map={rightDoorTexture} side={THREE.DoubleSide} />
         </mesh>
       </group>
 
-      {/* 3. Cartoon Cat on the path */}
-      <mesh position={[1.8, -1.2, -1.9]} scale={[0.8, 0.8, 1]}>
+      {/* 3. PORTFOLIO sign board above the doors */}
+      <mesh position={[0, 1.4, -1.98]}>
+        <planeGeometry args={[2.8, 0.75]} />
+        <meshBasicMaterial map={signTexture} transparent />
+      </mesh>
+
+      {/* 4. Window & succulent planter box on the right */}
+      <mesh position={[2.4, -0.5, -1.98]}>
+        <planeGeometry args={[2.4, 2.8]} />
+        <meshBasicMaterial map={windowTexture} transparent />
+      </mesh>
+
+      {/* 5. Cartoon Cat next to the door on the left */}
+      <mesh position={[-1.6, -1.4, -1.9]} scale={[0.8, 0.8, 1]}>
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial map={catTexture} transparent />
       </mesh>
 
-      {/* 4. Left tree with hanging mouse (adjusted to 1:1 ratio 1024x1024 mesh size 5x5) */}
-      <mesh position={[-3.6, 0.3, -1.9]} scale={[1.8, 1.8, 1]}>
-        <planeGeometry args={[5, 5]} />
+      {/* 6. Curvy tree with hanging mouse on the left (wide square mesh, no clipping) */}
+      <mesh position={[-3.3, 0.4, -1.9]} scale={[1.8, 1.8, 1]}>
+        <planeGeometry args={[4.2, 5.0]} />
         <meshBasicMaterial map={treeTexture} transparent />
       </mesh>
 
-      {/* 5. Pathway Ground Floor */}
-      <mesh position={[0, -2.2, -1.1]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[12, 4]} />
+      {/* 7. Cobblestone pathway ground floor (extends wide) */}
+      <mesh position={[0, -2.1, 0.5]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[30, 6]} />
         <meshBasicMaterial map={floorTexture} />
       </mesh>
     </group>
