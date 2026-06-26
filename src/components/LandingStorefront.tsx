@@ -27,8 +27,8 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     ctx.fillRect(0, 0, 1024, 512);
 
     // Draw brick pattern
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.75)';
-    ctx.lineWidth = 1.8;
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.42)'; // Thinner pencil style line color
+    ctx.lineWidth = 1.3;
     const rows = 14;
     const cols = 16;
     const rowHeight = 512 / rows;
@@ -65,7 +65,7 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
         drawSketchyLine(x, y, x, y + rowHeight);
         
         // Randomly hatch this brick
-        if (Math.random() < 0.22) {
+        if (Math.random() < 0.25) {
           const bx = x;
           const by = y;
           const bw = colWidth;
@@ -76,7 +76,7 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
           ctx.rect(bx + 4, by + 4, bw - 8, bh - 8);
           ctx.clip();
           
-          ctx.strokeStyle = 'rgba(0, 0, 0, 0.12)';
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
           ctx.lineWidth = 1;
           for (let k = -20; k < bw + bh; k += 8) {
             ctx.beginPath();
@@ -107,15 +107,16 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     ctx.stroke();
 
     // Plant box planter below window
-    ctx.fillStyle = '#faf8f5';
-    ctx.fillRect(630, 350, 300, 70);
+    ctx.fillStyle = '#d8a773'; // warm wooden color
+    ctx.fillRect(630, 340, 300, 70); // y = 340 (closes the gap!)
+    ctx.strokeStyle = '#1a1a1a';
     ctx.lineWidth = 4;
-    ctx.strokeRect(630, 350, 300, 70);
+    ctx.strokeRect(630, 340, 300, 70);
     
     // Draw wood grain lines on the planter
-    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
     ctx.lineWidth = 1.5;
-    for (let py = 360; py < 420; py += 15) {
+    for (let py = 350; py < 410; py += 15) {
       ctx.beginPath();
       ctx.moveTo(630, py);
       ctx.lineTo(930, py + (Math.random() - 0.5) * 2);
@@ -124,7 +125,7 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     
     // Draw rubber ducky in the center of planter
     ctx.save();
-    ctx.translate(780, 335);
+    ctx.translate(780, 332);
     ctx.fillStyle = '#fbe15c'; // yellow
     ctx.strokeStyle = '#1a1a1a';
     ctx.lineWidth = 2.2;
@@ -155,7 +156,7 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     ctx.restore();
 
     // Draw succulents on the left and right sides
-    // Saguaro cactus (left side, x = 675, y = 305)
+    // Saguaro cactus (left side, x = 675, y = 295)
     const drawSaguaro = (x: number, y: number) => {
       ctx.strokeStyle = '#1a1a1a';
       ctx.fillStyle = '#faf8f5';
@@ -188,9 +189,9 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
         ctx.fillRect(x + 7, sy, 2, 2);
       }
     };
-    drawSaguaro(675, 305);
+    drawSaguaro(675, 295);
 
-    // Prickly pear cactus (x = 725, y = 305)
+    // Prickly pear cactus (x = 725, y = 295)
     const drawPricklyPear = (x: number, y: number) => {
       ctx.strokeStyle = '#1a1a1a';
       ctx.fillStyle = '#faf8f5';
@@ -211,7 +212,7 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
       ctx.fill();
       ctx.stroke();
     };
-    drawPricklyPear(725, 305);
+    drawPricklyPear(725, 295);
 
     // Rosette Succulents (right side)
     const drawRosette = (x: number, y: number, r: number) => {
@@ -235,8 +236,8 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
       }
       ctx.restore();
     };
-    drawRosette(845, 335, 20);
-    drawRosette(890, 332, 22);
+    drawRosette(845, 325, 20);
+    drawRosette(890, 322, 22);
 
     // Wooden "PORTFOLIO" sign plank
     // Support bar
@@ -257,7 +258,7 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     ctx.stroke();
 
     // Plank sign board
-    ctx.fillStyle = '#e5c49e'; // light brown wood
+    ctx.fillStyle = '#d8a773'; // matching wooden color
     ctx.fillRect(362, 60, 300, 75);
     ctx.strokeStyle = '#1a1a1a';
     ctx.lineWidth = 4.5;
@@ -714,66 +715,68 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     return new THREE.CanvasTexture(canvas);
   }, []);
 
-  // 5. Tree illustration with organic branches and foliage
+  // 5. Tree illustration with organic branches and foliage (1:1 ratio canvas, padded to prevent clipping)
   const treeTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
+    canvas.width = 1024;
     canvas.height = 1024;
     const ctx = canvas.getContext('2d');
     if (!ctx) return new THREE.Texture();
 
     ctx.fillStyle = 'rgba(0,0,0,0)';
-    ctx.fillRect(0,0,512,1024);
+    ctx.fillRect(0, 0, 1024, 1024);
 
     ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 6;
     ctx.fillStyle = '#faf8f5';
 
-    // Trunk
+    // Trunk base at center bottom (x=512, y=1024)
     ctx.beginPath();
-    ctx.moveTo(220, 1024);
-    ctx.quadraticCurveTo(200, 600, 230, 500); // left trunk edge
-    ctx.lineTo(282, 500); // right trunk edge
-    ctx.quadraticCurveTo(312, 600, 292, 1024);
+    ctx.moveTo(460, 1024);
+    ctx.quadraticCurveTo(430, 600, 480, 500); // left trunk edge
+    ctx.lineTo(544, 500); // right trunk edge
+    ctx.quadraticCurveTo(594, 600, 564, 1024);
     ctx.fill();
     ctx.stroke();
 
     // Wood texture lines on trunk
-    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
-    ctx.lineWidth = 2.5;
-    for (let tx = 230; tx < 280; tx += 15) {
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    ctx.lineWidth = 3;
+    for (let tx = 480; tx < 550; tx += 20) {
       ctx.beginPath();
       ctx.moveTo(tx, 1024);
-      ctx.quadraticCurveTo(tx - 20, 700, tx, 500);
+      ctx.quadraticCurveTo(tx - 30, 750, tx, 500);
       ctx.stroke();
     }
     ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 6;
 
-    // Branches
+    // Branches going out
+    // Branch Left
     ctx.beginPath();
-    ctx.moveTo(230, 520);
-    ctx.quadraticCurveTo(120, 400, 100, 320);
-    ctx.lineTo(130, 310);
-    ctx.quadraticCurveTo(145, 380, 240, 480);
+    ctx.moveTo(480, 520);
+    ctx.quadraticCurveTo(340, 420, 300, 320);
+    ctx.lineTo(350, 310);
+    ctx.quadraticCurveTo(375, 380, 495, 480);
     ctx.fill();
     ctx.stroke();
     
+    // Branch Right
     ctx.beginPath();
-    ctx.moveTo(280, 510);
-    ctx.quadraticCurveTo(380, 390, 400, 300);
-    ctx.lineTo(370, 295);
-    ctx.quadraticCurveTo(350, 370, 260, 470);
+    ctx.moveTo(540, 510);
+    ctx.quadraticCurveTo(680, 410, 720, 300);
+    ctx.lineTo(670, 295);
+    ctx.quadraticCurveTo(640, 370, 520, 470);
     ctx.fill();
     ctx.stroke();
 
-    // Secondary branch for computer mouse
+    // Secondary small branch for hanging mouse
     ctx.beginPath();
-    ctx.moveTo(160, 360);
-    ctx.quadraticCurveTo(150, 400, 140, 430);
+    ctx.moveTo(380, 370);
+    ctx.quadraticCurveTo(360, 410, 350, 440);
     ctx.stroke();
 
-    // Cloud leaf clusters
+    // Detailed leaf cluster drawer
     const drawLeafCluster = (cx: number, cy: number, r: number) => {
       ctx.fillStyle = '#faf8f5';
       ctx.beginPath();
@@ -781,53 +784,56 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
       ctx.fill();
       ctx.stroke();
       
+      // Draw sub-arcs on perimeter
       ctx.strokeStyle = '#1a1a1a';
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 5;
       const steps = 14;
       for (let i = 0; i <= steps; i++) {
         const angle = (i / steps) * Math.PI * 2;
         const arcX = cx + Math.cos(angle) * r;
         const arcY = cy + Math.sin(angle) * r;
         ctx.beginPath();
-        ctx.arc(arcX, arcY, 22, angle - Math.PI/2, angle + Math.PI/2);
+        ctx.arc(arcX, arcY, 24, angle - Math.PI/2, angle + Math.PI/2);
         ctx.stroke();
       }
       
+      // Interior texture curves
       ctx.strokeStyle = 'rgba(0,0,0,0.18)';
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 3;
       for (let k = 0; k < 6; k++) {
         const ix = cx + (Math.random() - 0.5) * (r * 0.9);
         const iy = cy + (Math.random() - 0.5) * (r * 0.9);
-        const ir = 20 + Math.random() * 30;
+        const ir = 30 + Math.random() * 30;
         ctx.beginPath();
         ctx.arc(ix, iy, ir, 0.3, Math.PI * 0.85);
         ctx.stroke();
       }
     };
 
-    drawLeafCluster(140, 280, 120);
-    drawLeafCluster(370, 260, 120);
-    drawLeafCluster(256, 190, 140);
-    drawLeafCluster(256, 320, 100);
+    // Draw leafy clusters (centered and padded, no clipping!)
+    drawLeafCluster(360, 300, 140);
+    drawLeafCluster(660, 280, 140);
+    drawLeafCluster(512, 190, 160);
+    drawLeafCluster(512, 340, 120);
 
-    // Hanging Mouse cord
+    // Hanging Mouse wire cord
     ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 3.5;
+    ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.moveTo(140, 430);
-    ctx.bezierCurveTo(155, 460, 110, 520, 130, 640);
+    ctx.moveTo(350, 440);
+    ctx.bezierCurveTo(370, 480, 310, 550, 340, 680);
     ctx.stroke();
 
     // Mouse body
     ctx.save();
-    ctx.translate(130, 665);
+    ctx.translate(340, 715);
     ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-    ctx.shadowBlur = 6;
-    ctx.shadowOffsetY = 4;
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 5;
     
     ctx.fillStyle = '#faf8f5';
     ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 4.5;
     
     ctx.beginPath();
     ctx.roundRect ? ctx.roundRect(-24, -34, 48, 68, 18) : ctx.rect(-24, -34, 48, 68);
@@ -978,9 +984,9 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
         <meshBasicMaterial map={catTexture} transparent />
       </mesh>
 
-      {/* 4. Left tree with hanging mouse (adjusted to match 1:2 texture ratio) */}
+      {/* 4. Left tree with hanging mouse (adjusted to 1:1 ratio 1024x1024 mesh size 5x5) */}
       <mesh position={[-3.6, 0.3, -1.9]} scale={[1.8, 1.8, 1]}>
-        <planeGeometry args={[2.5, 5]} />
+        <planeGeometry args={[5, 5]} />
         <meshBasicMaterial map={treeTexture} transparent />
       </mesh>
 
