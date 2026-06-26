@@ -607,7 +607,7 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     return new THREE.CanvasTexture(canvas);
   }, []);
 
-  // 7. Tree & Hanging Mouse Texture (1024x1024 - centered, no border clipping)
+  // 7. Tree & Hanging Mouse Texture (1024x1024 - high-fidelity hand-drawn)
   const treeTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 1024;
@@ -618,138 +618,336 @@ export const LandingStorefront: React.FC<LandingStorefrontProps> = ({ onEnterCor
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.fillRect(0, 0, 1024, 1024);
 
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 6;
-    ctx.fillStyle = '#faf8f5';
+    const INK = '#1a1a1a';
 
-    // Trunk
-    ctx.beginPath();
-    ctx.moveTo(460, 1024);
-    ctx.bezierCurveTo(420, 820, 490, 680, 475, 500); // organic S-curves
-    ctx.lineTo(535, 500);
-    ctx.bezierCurveTo(550, 680, 480, 820, 520, 1024);
-    ctx.fill();
-    ctx.stroke();
-
-    // Trunk wood texture lines
-    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-    ctx.lineWidth = 3;
-    for (let tx = 480; tx < 540; tx += 20) {
+    // ── Helper: draw a sketchy line with slight jitter ──
+    const sketchLine = (x1: number, y1: number, x2: number, y2: number, lw: number = 2.5) => {
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = lw;
       ctx.beginPath();
-      ctx.moveTo(tx, 1024);
-      ctx.quadraticCurveTo(tx - 30, 750, tx - 15, 500);
+      ctx.moveTo(x1, y1);
+      const segs = 5;
+      for (let i = 1; i <= segs; i++) {
+        const t = i / segs;
+        ctx.lineTo(
+          x1 + (x2 - x1) * t + (Math.random() - 0.5) * 2,
+          y1 + (y2 - y1) * t + (Math.random() - 0.5) * 2
+        );
+      }
       ctx.stroke();
-    }
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 6;
+    };
 
-    // Branches
-    // Left Branch
-    ctx.beginPath();
-    ctx.moveTo(475, 510);
-    ctx.quadraticCurveTo(340, 430, 270, 340);
-    ctx.lineTo(315, 325);
-    ctx.quadraticCurveTo(375, 390, 495, 480);
-    ctx.fill();
-    ctx.stroke();
-    
-    // Right Branch
-    ctx.beginPath();
-    ctx.moveTo(535, 505);
-    ctx.quadraticCurveTo(680, 410, 750, 315);
-    ctx.lineTo(710, 305);
-    ctx.quadraticCurveTo(640, 380, 520, 470);
-    ctx.fill();
-    ctx.stroke();
+    // ── Helper: draw a cloud-like scalloped foliage shape ──
+    // Instead of smooth circles, we trace bumpy outlines with many small arcs
+    const drawCloudFoliage = (cx: number, cy: number, rx: number, ry: number, bumpCount: number = 18, bumpR: number = 28) => {
+      ctx.fillStyle = '#f5f3f0';
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = 3.5;
 
-    // Middle Branch
-    ctx.beginPath();
-    ctx.moveTo(495, 495);
-    ctx.quadraticCurveTo(512, 420, 500, 350);
-    ctx.lineTo(525, 350);
-    ctx.quadraticCurveTo(535, 420, 515, 495);
-    ctx.fill();
-    ctx.stroke();
-
-    // Secondary hanging mouse branch
-    ctx.beginPath();
-    ctx.moveTo(350, 390);
-    ctx.quadraticCurveTo(330, 430, 320, 460);
-    ctx.stroke();
-
-    // Leaf cluster outlines with perimeter arcs & sketchy hatching
-    const drawLeafCluster = (cx: number, cy: number, r: number) => {
-      ctx.fillStyle = '#faf8f5';
+      // Build the scalloped path
       ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      for (let i = 0; i < bumpCount; i++) {
+        const angle = (i / bumpCount) * Math.PI * 2;
+        const nextAngle = ((i + 1) / bumpCount) * Math.PI * 2;
+        const midAngle = (angle + nextAngle) / 2;
+
+        const edgeX = cx + Math.cos(angle) * rx;
+        const edgeY = cy + Math.sin(angle) * ry;
+        const nextEdgeX = cx + Math.cos(nextAngle) * rx;
+        const nextEdgeY = cy + Math.sin(nextAngle) * ry;
+
+        // Control point pushed outward for the bump
+        const cpX = cx + Math.cos(midAngle) * (rx + bumpR + (Math.random() - 0.5) * 8);
+        const cpY = cy + Math.sin(midAngle) * (ry + bumpR + (Math.random() - 0.5) * 8);
+
+        if (i === 0) {
+          ctx.moveTo(edgeX, edgeY);
+        }
+        ctx.quadraticCurveTo(cpX, cpY, nextEdgeX, nextEdgeY);
+      }
+      ctx.closePath();
       ctx.fill();
       ctx.stroke();
-      
-      ctx.strokeStyle = '#1a1a1a';
-      ctx.lineWidth = 5;
-      const steps = 15;
-      for (let i = 0; i <= steps; i++) {
-        const angle = (i / steps) * Math.PI * 2;
-        const arcX = cx + Math.cos(angle) * r;
-        const arcY = cy + Math.sin(angle) * r;
+
+      // Interior scallop detail arcs (depth suggestion)
+      ctx.strokeStyle = 'rgba(0,0,0,0.10)';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < bumpCount; i++) {
+        const angle = (i / bumpCount) * Math.PI * 2;
+        const ax = cx + Math.cos(angle) * (rx * 0.7);
+        const ay = cy + Math.sin(angle) * (ry * 0.7);
         ctx.beginPath();
-        ctx.arc(arcX, arcY, 22, angle - Math.PI/2, angle + Math.PI/2);
+        ctx.arc(ax, ay, bumpR * 0.6, angle - 0.8, angle + 0.8);
         ctx.stroke();
       }
-      
-      // Interior sketch shading
-      ctx.strokeStyle = 'rgba(0,0,0,0.18)';
-      ctx.lineWidth = 2.5;
-      for (let k = 0; k < 8; k++) {
-        const ix = cx + (Math.random() - 0.5) * (r * 1.1);
-        const iy = cy + (Math.random() - 0.5) * (r * 1.1);
-        const ir = 20 + Math.random() * 25;
+
+      // Interior sketch hatching curves for shading depth
+      ctx.strokeStyle = 'rgba(0,0,0,0.07)';
+      ctx.lineWidth = 1.5;
+      for (let k = 0; k < 10; k++) {
+        const ix = cx + (Math.random() - 0.5) * rx * 1.2;
+        const iy = cy + (Math.random() - 0.5) * ry * 1.2;
+        const ir = 15 + Math.random() * 20;
         ctx.beginPath();
-        ctx.arc(ix, iy, ir, 0.4, Math.PI * 0.9);
+        ctx.arc(ix, iy, ir, Math.random(), Math.PI * (0.5 + Math.random() * 0.6));
         ctx.stroke();
       }
     };
 
-    drawLeafCluster(320, 310, 130);
-    drawLeafCluster(700, 290, 130);
-    drawLeafCluster(512, 190, 150);
-    drawLeafCluster(390, 200, 120);
-    drawLeafCluster(620, 200, 120);
-    drawLeafCluster(512, 340, 110);
+    // ═══════════════════════════════════════════
+    // TRUNK – thick, organically curved, with bark
+    // ═══════════════════════════════════════════
+    ctx.fillStyle = '#faf8f5';
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 4;
 
-    // Hanging Mouse cord
-    ctx.strokeStyle = '#1a1a1a';
+    // Main trunk: wide base tapering to fork point
+    ctx.beginPath();
+    // Left edge of trunk (bottom to fork)
+    ctx.moveTo(430, 1024);
+    ctx.bezierCurveTo(415, 900, 410, 780, 430, 650);
+    ctx.bezierCurveTo(440, 580, 445, 530, 450, 480);
+    // Top of trunk at fork
+    ctx.lineTo(470, 440);
+    // Right edge back down
+    ctx.lineTo(550, 440);
+    ctx.bezierCurveTo(545, 530, 540, 580, 545, 650);
+    ctx.bezierCurveTo(560, 780, 555, 900, 560, 1024);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Bark texture grain lines (vertical with organic wobble)
+    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+    ctx.lineWidth = 1.8;
+    for (let tx = 440; tx < 555; tx += 14) {
+      ctx.beginPath();
+      ctx.moveTo(tx + (Math.random() - 0.5) * 4, 1024);
+      ctx.bezierCurveTo(
+        tx - 8 + Math.random() * 6, 850,
+        tx + 5 + Math.random() * 6, 700,
+        tx - 3 + Math.random() * 6, 480
+      );
+      ctx.stroke();
+    }
+    // Horizontal bark cracks
+    ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+    ctx.lineWidth = 1.2;
+    for (let by = 520; by < 1000; by += 35 + Math.random() * 25) {
+      const bx1 = 435 + Math.random() * 15;
+      const bx2 = 545 - Math.random() * 15;
+      ctx.beginPath();
+      ctx.moveTo(bx1, by);
+      ctx.lineTo(bx2, by + (Math.random() - 0.5) * 6);
+      ctx.stroke();
+    }
+
+    // ═══════════════════════════════════════════
+    // MAJOR BRANCHES from the fork
+    // ═══════════════════════════════════════════
+    ctx.fillStyle = '#faf8f5';
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 4;
+
+    // LEFT MAIN BRANCH – thick limb curving left and upward
+    ctx.beginPath();
+    ctx.moveTo(450, 480);
+    ctx.bezierCurveTo(400, 440, 340, 400, 270, 340);
+    ctx.bezierCurveTo(240, 315, 210, 280, 190, 260);
+    // return edge (thinner at tip)
+    ctx.lineTo(210, 250);
+    ctx.bezierCurveTo(230, 270, 260, 300, 300, 325);
+    ctx.bezierCurveTo(370, 375, 430, 420, 470, 455);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Sub-branch from left main (goes further left-up, bare tip)
+    ctx.beginPath();
+    ctx.moveTo(300, 340);
+    ctx.bezierCurveTo(260, 300, 220, 250, 170, 200);
+    ctx.lineTo(185, 192);
+    ctx.bezierCurveTo(230, 240, 275, 290, 320, 330);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Sub-branch going downward-left for mouse hang point
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(340, 380);
+    ctx.bezierCurveTo(320, 410, 310, 440, 305, 470);
+    ctx.lineTo(315, 472);
+    ctx.bezierCurveTo(325, 445, 335, 415, 355, 385);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // RIGHT MAIN BRANCH – thick limb curving right and upward
     ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.moveTo(320, 460);
-    ctx.bezierCurveTo(340, 500, 280, 570, 310, 700);
+    ctx.moveTo(550, 440);
+    ctx.bezierCurveTo(600, 400, 660, 360, 730, 310);
+    ctx.bezierCurveTo(760, 290, 790, 260, 810, 240);
+    // return edge
+    ctx.lineTo(795, 232);
+    ctx.bezierCurveTo(770, 255, 740, 280, 710, 300);
+    ctx.bezierCurveTo(640, 345, 580, 385, 535, 420);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Sub-branch from right main (bare tip extending up-right)
+    ctx.beginPath();
+    ctx.moveTo(710, 310);
+    ctx.bezierCurveTo(740, 270, 770, 230, 800, 180);
+    ctx.lineTo(810, 188);
+    ctx.bezierCurveTo(780, 235, 750, 275, 725, 315);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // MIDDLE/UP BRANCH – goes straight up
+    ctx.beginPath();
+    ctx.moveTo(480, 450);
+    ctx.bezierCurveTo(485, 400, 490, 350, 488, 290);
+    ctx.lineTo(510, 290);
+    ctx.bezierCurveTo(512, 350, 508, 400, 515, 450);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Upper fork from middle branch
+    ctx.beginPath();
+    ctx.moveTo(490, 310);
+    ctx.bezierCurveTo(470, 260, 440, 210, 410, 160);
+    ctx.lineTo(425, 155);
+    ctx.bezierCurveTo(450, 200, 480, 250, 498, 300);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(508, 310);
+    ctx.bezierCurveTo(530, 260, 560, 210, 590, 160);
+    ctx.lineTo(580, 152);
+    ctx.bezierCurveTo(550, 200, 525, 250, 503, 295);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // ═══════════════════════════════════════════
+    // BARE BRANCH TIPS (extend beyond foliage)
+    // Thin sketchy lines that poke out above foliage canopy
+    // ═══════════════════════════════════════════
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 2.5;
+
+    // Top-left bare twigs
+    sketchLine(170, 200, 140, 145, 2.5);
+    sketchLine(140, 145, 115, 100, 2);
+    sketchLine(140, 145, 160, 105, 1.8);
+    sketchLine(190, 260, 155, 225, 2);
+    sketchLine(155, 225, 120, 190, 1.5);
+
+    // Top-center bare twigs
+    sketchLine(410, 160, 385, 105, 2.5);
+    sketchLine(385, 105, 365, 55, 2);
+    sketchLine(385, 105, 405, 65, 1.8);
+    sketchLine(590, 160, 615, 100, 2.5);
+    sketchLine(615, 100, 640, 50, 2);
+    sketchLine(615, 100, 595, 60, 1.8);
+
+    // Top-right bare twigs
+    sketchLine(800, 180, 830, 130, 2.5);
+    sketchLine(830, 130, 855, 85, 2);
+    sketchLine(830, 130, 810, 90, 1.8);
+    sketchLine(810, 240, 845, 195, 2);
+    sketchLine(845, 195, 870, 155, 1.5);
+
+    // Small forking twigs from branches
+    sketchLine(250, 320, 225, 280, 1.8);
+    sketchLine(225, 280, 200, 255, 1.5);
+    sketchLine(740, 290, 770, 250, 1.8);
+    sketchLine(770, 250, 790, 220, 1.5);
+
+    // ═══════════════════════════════════════════
+    // FOLIAGE – cloud-shaped scalloped masses
+    // Drawn AFTER branches so they overlap properly
+    // ═══════════════════════════════════════════
+
+    // Large left foliage mass
+    drawCloudFoliage(280, 260, 130, 110, 22, 26);
+    // Large right foliage mass
+    drawCloudFoliage(720, 250, 120, 100, 20, 25);
+    // Central top foliage (biggest)
+    drawCloudFoliage(500, 180, 155, 120, 24, 28);
+    // Upper-left overlap
+    drawCloudFoliage(380, 190, 110, 95, 18, 24);
+    // Upper-right overlap
+    drawCloudFoliage(620, 190, 110, 95, 18, 24);
+    // Lower-center bridge (connects the masses visually)
+    drawCloudFoliage(500, 310, 100, 80, 16, 22);
+
+    // ═══════════════════════════════════════════
+    // HANGING MOUSE – cord loops from branch, mouse dangles
+    // ═══════════════════════════════════════════
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 3;
+
+    // Cord wrapping around branch then hanging down
+    ctx.beginPath();
+    ctx.moveTo(310, 470);
+    // Small loop around the branch tip
+    ctx.bezierCurveTo(305, 485, 315, 495, 310, 510);
+    // Long hanging cord with natural swing curve
+    ctx.bezierCurveTo(320, 560, 290, 620, 310, 700);
     ctx.stroke();
 
     // Mouse body
     ctx.save();
-    ctx.translate(310, 735);
+    ctx.translate(310, 740);
     ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
     ctx.shadowBlur = 8;
     ctx.shadowOffsetY = 5;
-    
+
     ctx.fillStyle = '#faf8f5';
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 4.5;
-    
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 4;
+
+    // Mouse oval body
     ctx.beginPath();
-    ctx.roundRect ? ctx.roundRect(-24, -34, 48, 68, 18) : ctx.rect(-24, -34, 48, 68);
+    ctx.roundRect ? ctx.roundRect(-26, -38, 52, 76, 20) : ctx.rect(-26, -38, 52, 76);
     ctx.fill();
     ctx.stroke();
-    
+
+    // Top separation line (scroll wheel area)
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(0, -34);
-    ctx.lineTo(0, -6);
-    ctx.moveTo(-24, -6);
-    ctx.lineTo(24, -6);
+    ctx.moveTo(0, -38);
+    ctx.lineTo(0, -8);
     ctx.stroke();
-    
-    ctx.fillStyle = '#1a1a1a';
-    ctx.fillRect(-3.5, -24, 7, 12);
+
+    // Middle click line
+    ctx.beginPath();
+    ctx.moveTo(-26, -8);
+    ctx.lineTo(26, -8);
+    ctx.stroke();
+
+    // Scroll wheel
+    ctx.fillStyle = INK;
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(-4, -28, 8, 14, 3) : ctx.fillRect(-4, -28, 8, 14);
+    ctx.fill();
+
+    // Left/Right button labels (subtle lines)
+    ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-14, -32); ctx.lineTo(-14, -12);
+    ctx.moveTo(14, -32); ctx.lineTo(14, -12);
+    ctx.stroke();
+
     ctx.restore();
 
     return new THREE.CanvasTexture(canvas);
