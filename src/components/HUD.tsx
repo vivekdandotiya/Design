@@ -56,7 +56,7 @@ export const HUD: React.FC<HUDProps> = ({
         <div className="storefront-bottom-sign">
           <div className="bottom-sign-title">EXPLORER</div>
           <div className="bottom-sign-desc">
-            Click a door to enter. Audio is currently: <strong>{isAudioOn ? 'on ♫' : 'off'}</strong>
+            Click a door to enter. Audio is currently <span className="audio-bracket-toggle">[{isAudioOn ? '🔊 ON' : '🔇 OFF'}]</span>
           </div>
         </div>
       )}
