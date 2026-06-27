@@ -120,8 +120,8 @@ export default function HomePage() {
       <section className="relative section overflow-hidden">
         {/* Background gradients */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-primary-500/10 rounded-full blur-[128px]" />
-          <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-accent-violet/10 rounded-full blur-[96px]" />
+          <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary-400/5 rounded-full blur-[120px]" />
+          <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-accent-violet/5 rounded-full blur-[90px]" />
         </div>
 
         <div className="container-wide relative">
@@ -140,9 +140,12 @@ export default function HomePage() {
                 </span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-display leading-tight tracking-tight text-surface-900 dark:text-white">
-                Stop Guessing.{' '}
-                <span className="text-gradient">Start Choosing</span>{' '}
+              <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold font-display leading-[1.1] tracking-tight text-surface-900 dark:text-white">
+                Stop Guessing.<br />
+                <span className="text-surface-900 dark:text-white relative">
+                  Start Choosing
+                  <span className="absolute bottom-1 left-0 right-0 h-4 bg-primary-500/10 dark:bg-primary-500/20 -z-10 -rotate-1 rounded-sm"></span>
+                </span><br />
                 Smarter.
               </h1>
 
@@ -155,7 +158,7 @@ export default function HomePage() {
                   Start Comparing
                   <ArrowRight className="w-5 h-5" />
                 </Link>
-                <Link to="/products" className="btn-secondary text-base !px-8 !py-4">
+                <Link to="/products" className="btn-ghost text-base !px-8 !py-4">
                   Explore Products
                 </Link>
               </div>

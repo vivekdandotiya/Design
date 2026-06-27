@@ -37,7 +37,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
         <div
           className={cn(
             'card overflow-hidden transition-all duration-300',
-            'hover:-translate-y-1 hover:shadow-glass-lg',
+            'hover:-translate-y-0.5 hover:shadow-md',
             selected && 'ring-2 ring-primary-500 dark:ring-primary-400'
           )}
         >
