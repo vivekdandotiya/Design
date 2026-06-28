@@ -15,7 +15,6 @@ import { useAuthStore } from '../store/authStore';
 import { cn } from '../lib/utils';
 
 const navLinks = [
-  { to: '/products', label: 'Products' },
   { to: '/compare', label: 'Compare' },
   { to: '/recommend', label: 'Recommend' },
 ];

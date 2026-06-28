@@ -158,8 +158,8 @@ export default function HomePage() {
                   Start Comparing
                   <ArrowRight className="w-5 h-5" />
                 </Link>
-                <Link to="/products" className="btn-ghost text-base !px-8 !py-4">
-                  Explore Products
+                <Link to="/recommend" className="btn-ghost text-base !px-8 !py-4">
+                  AI Recommendation
                 </Link>
               </div>
             </motion.div>
