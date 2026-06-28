@@ -43,12 +43,38 @@ export interface AIProductRecommendation {
   recommendation: AIRecommendation;
 }
 
-const getGenAI = (): GoogleGenerativeAI => {
+const callGeminiAPI = async (prompt: string, modelName: string = 'gemini-2.5-flash'): Promise<string> => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY environment variable is not set');
   }
-  return new GoogleGenerativeAI(apiKey);
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+  const payload = {
+    contents: [{ parts: [{ text: prompt }] }]
+  };
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}) as any) as any;
+    throw new Error(
+      `Gemini API Error [${res.status}]: ${errorJson.error?.message || res.statusText}`
+    );
+  }
+
+  const data = await res.json() as any;
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) {
+    throw new Error('Empty response from Gemini API');
+  }
+  return text;
 };
 
 export const generateRecommendation = async (
@@ -56,8 +82,6 @@ export const generateRecommendation = async (
   userPreferences: UserPreferences
 ): Promise<AIProductRecommendation[]> => {
   try {
-    const genAI = getGenAI();
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const productDescriptions = products
       .map(
@@ -112,9 +136,7 @@ For EACH product, provide your analysis in the following JSON format. Return a J
 
 IMPORTANT: Return ONLY valid JSON, no markdown formatting or code blocks. Scores should be integers from 0-100 based on realistic assessment.`;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    const text = await callGeminiAPI(prompt);
 
     // Clean the response - remove markdown code blocks if present
     let cleanedText = text.trim();
@@ -199,8 +221,6 @@ export const generateComparisonAnalysis = async (
   products: ProductData[]
 ): Promise<AIComparisonAnalysis[]> => {
   try {
-    const genAI = getGenAI();
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const productDescriptions = products
       .map(
@@ -238,9 +258,7 @@ Provide your analysis in the following JSON format. Return a JSON array with one
 
 IMPORTANT: Return ONLY valid JSON, no markdown formatting or code blocks.`;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    const text = await callGeminiAPI(prompt);
 
     let cleanedText = text.trim();
     if (cleanedText.startsWith('```json')) {
@@ -313,11 +331,6 @@ export const generateWebComparison = async (
   requirements: string
 ): Promise<WebComparisonResult> => {
   try {
-    const genAI = getGenAI();
-    // Using gemini-1.5-flash with Google Search grounding enabled
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash'
-    });
 
     const prompt = `Search the web and find accurate, up-to-date specifications for the following products:
 ${productQueries.join(', ')}
@@ -383,9 +396,7 @@ Provide your response in the following JSON format. Return ONLY the JSON object.
 
 IMPORTANT: Search the web to find accurate, real details for these models. If a specific model year isn't specified, use the latest model year.`;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    const text = await callGeminiAPI(prompt);
 
     let cleanedText = text.trim();
     if (cleanedText.startsWith('```json')) {
@@ -520,8 +531,6 @@ export const generateDynamicRecommendation = async (
   userPreferences: UserPreferences
 ): Promise<DynamicRecommendationResult> => {
   try {
-    const genAI = getGenAI();
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `You are an AI tech advisor. Search the web and find the top 3 best laptops that fit the following user preferences:
 - Budget: ${userPreferences.budget ? `₹${userPreferences.budget.toLocaleString('en-IN')}` : 'Not specified'}
@@ -580,9 +589,7 @@ Provide your response in the following JSON format. Return ONLY the JSON object.
 
 IMPORTANT: Search the web to find accurate, real details for these models.`;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    const text = await callGeminiAPI(prompt);
 
     let cleanedText = text.trim();
     if (cleanedText.startsWith('```json')) {
