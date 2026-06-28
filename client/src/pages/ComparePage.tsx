@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Trash2, CheckCircle, Plus, ArrowLeft, Cpu, Globe } from 'lucide-react';
+import { Sparkles, Trash2, CheckCircle, Plus, ArrowLeft, Globe } from 'lucide-react';
 import Badge from '../components/Badge';
-import { formatPrice } from '../lib/utils';
+import { formatPrice, cn } from '../lib/utils';
 import api from '../lib/api';
 import type { CompareResult } from '../types';
 
@@ -190,11 +190,16 @@ export const ComparePage: React.FC = () => {
                       </th>
                       {result.products.map((p) => (
                         <th key={p._id} className="p-5 align-top w-64 min-w-[220px]">
-                          <div className="bg-surface-50/50 dark:bg-surface-800/20 rounded-2xl p-4 text-center border border-surface-200/50 dark:border-surface-800/30">
+                          <div className="glass hover:shadow-glow hover:-translate-y-0.5 transition-all duration-300 rounded-2xl p-4 text-center border border-surface-200/20 dark:border-surface-800/20 bg-surface-50/40 dark:bg-surface-950/20">
                             <h3 className="font-bold font-display text-base text-surface-900 dark:text-white line-clamp-2">
                               {p.name}
                             </h3>
-                            <p className="text-primary-600 dark:text-primary-400 font-bold mt-2.5 text-lg">
+                            <p className={cn(
+                              "font-bold mt-2.5 text-lg transition-colors",
+                              result.highlights.bestValue === p._id 
+                                ? "text-emerald-600 dark:text-emerald-400" 
+                                : "text-primary-600 dark:text-primary-400"
+                            )}>
                               {p.price > 0 ? formatPrice(p.price) : 'N/A'}
                             </p>
                           </div>
@@ -224,24 +229,38 @@ export const ComparePage: React.FC = () => {
 
                     {/* Specs Rows */}
                     {[
-                      { key: 'processor', label: 'Processor', icon: Cpu },
+                      { key: 'processor', label: 'Processor', highlightKey: 'bestPerformance' },
                       { key: 'gpu', label: 'Graphics' },
                       { key: 'ram', label: 'RAM' },
                       { key: 'storage', label: 'Storage' },
                       { key: 'displaySize', label: 'Display' },
-                      { key: 'battery', label: 'Battery' },
-                      { key: 'weight', label: 'Weight' },
+                      { key: 'battery', label: 'Battery', highlightKey: 'bestBattery' },
+                      { key: 'weight', label: 'Weight', highlightKey: 'mostPortable' },
                       { key: 'os', label: 'Operating System' },
                     ].map((spec) => (
                       <tr key={spec.key} className="hover:bg-surface-50/20 dark:hover:bg-surface-900/10 transition-colors">
                         <td className="p-5 font-semibold text-surface-600 bg-surface-50/30 dark:bg-surface-900/10 text-sm">
                           {spec.label}
                         </td>
-                        {result.products.map((p) => (
-                          <td key={p._id} className="p-5 text-surface-900 dark:text-surface-100 text-center text-sm font-medium">
-                            {(p as any)[spec.key] || '-'}
-                          </td>
-                        ))}
+                        {result.products.map((p) => {
+                          const isWinnerCell = spec.highlightKey && (result.highlights as any)[spec.highlightKey] === p._id;
+                          return (
+                            <td 
+                              key={p._id} 
+                              className={cn(
+                                "p-5 text-center text-sm font-medium transition-colors",
+                                isWinnerCell 
+                                  ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 font-bold" 
+                                  : "text-surface-900 dark:text-surface-100"
+                              )}
+                            >
+                              <div className="flex items-center justify-center gap-1.5">
+                                {(p as any)[spec.key] || '-'}
+                                {isWinnerCell && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Category Winner" />}
+                              </div>
+                            </td>
+                          );
+                        })}
                       </tr>
                     ))}
                   </tbody>
