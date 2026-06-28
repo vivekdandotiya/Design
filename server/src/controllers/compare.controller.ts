@@ -11,6 +11,7 @@ interface CompareHighlight {
 }
 
 // POST /api/compare
+// TODO: Integrate Gemini AI to generate structured side-by-side product analysis
 export const compareProducts = async (req: Request, res: Response): Promise<void> => {
   try {
     const { productIds } = req.body;
