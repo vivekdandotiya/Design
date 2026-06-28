@@ -97,7 +97,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true });
     try {
       const res = await api.get('/auth/me');
-      set({ user: res.data, isAuthenticated: true, isLoading: false });
+      set({ user: res.data.user, isAuthenticated: true, isLoading: false });
     } catch {
       localStorage.removeItem('cw-token');
       set({ user: null, token: null, isAuthenticated: false, isLoading: false });
