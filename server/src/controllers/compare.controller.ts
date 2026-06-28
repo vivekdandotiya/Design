@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import Product from '../models/Product';
 import Comparison from '../models/Comparison';
 import { AuthRequest } from '../middleware/auth';
-import { generateComparisonAnalysis } from '../services/ai.service';
+import { generateComparisonAnalysis, generateWebComparison } from '../services/ai.service';
 
 interface CompareHighlight {
   bestValue: string;
@@ -35,14 +35,7 @@ export const compareProducts = async (req: Request, res: Response): Promise<void
 
       const result = await generateWebComparison(productQueries, requirements);
 
-      // Save comparison if user is authenticated
-      const authReq = req as AuthRequest;
-      if (authReq.user) {
-        await Comparison.create({
-          user: authReq.user._id,
-        });
-      }
-
+      // Save comparison if user is authenticated (skipping database insert for now for dynamic web comparisons)
       res.status(200).json({
         success: true,
         data: result,
