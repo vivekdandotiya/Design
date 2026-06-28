@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Trash2, CheckCircle, Plus, ArrowLeft, Globe } from 'lucide-react';
+import { Sparkles, Trash2, CheckCircle, Plus, ArrowLeft, Globe, TrendingUp, Award } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import Badge from '../components/Badge';
 import { formatPrice, cn } from '../lib/utils';
 import api from '../lib/api';
@@ -158,13 +159,28 @@ export const ComparePage: React.FC = () => {
           /* ── RESULTS STATE ── */
           <motion.div
             key="compare-results"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
+            variants={{
+              hidden: { opacity: 0 },
+              show: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.1
+                }
+              }
+            }}
+            initial="hidden"
+            animate="show"
+            exit="hidden"
             className="space-y-12"
           >
             {/* Header / Nav Back */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-surface-200 dark:border-surface-800 pb-6">
+            <motion.div 
+              variants={{
+                hidden: { opacity: 0, y: 10 },
+                show: { opacity: 1, y: 0 }
+              }}
+              className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-surface-200/20 dark:border-surface-800/40 pb-6"
+            >
               <div>
                 <button
                   onClick={resetComparison}
@@ -172,20 +188,26 @@ export const ComparePage: React.FC = () => {
                 >
                   <ArrowLeft size={16} /> New Comparison
                 </button>
-                <h1 className="text-3xl font-display font-bold">Comparison Results</h1>
+                <h1 className="text-3xl font-display font-bold text-surface-900 dark:text-white">Comparison Results</h1>
               </div>
-              <div className="text-xs text-surface-500 flex items-center gap-1.5 bg-surface-50 dark:bg-surface-900 px-3 py-1.5 rounded-full border border-surface-200 dark:border-surface-800">
-                <Globe size={12} /> Search grounding completed
+              <div className="text-xs text-surface-500 flex items-center gap-1.5 bg-surface-50/50 dark:bg-surface-900/50 px-3 py-1.5 rounded-full border border-surface-200/20 dark:border-surface-800/20 backdrop-blur-sm">
+                <Globe size={12} className="text-primary-500" /> Search grounding completed
               </div>
-            </div>
+            </motion.div>
 
             {/* Spec Table */}
-            <div className="glass rounded-3xl overflow-hidden">
+            <motion.div 
+              variants={{
+                hidden: { opacity: 0, y: 15 },
+                show: { opacity: 1, y: 0 }
+              }}
+              className="glass rounded-3xl overflow-hidden"
+            >
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-surface-200 dark:divide-surface-800">
+                <table className="min-w-full divide-y divide-surface-200/20 dark:divide-surface-800/20">
                   <thead>
                     <tr>
-                      <th className="w-48 p-5 text-left font-semibold text-surface-900 dark:text-white bg-surface-50/50 dark:bg-surface-900/50">
+                      <th className="w-48 p-5 text-left font-semibold text-surface-900 dark:text-white bg-surface-50/30 dark:bg-surface-950/20">
                         Feature
                       </th>
                       {result.products.map((p) => (
@@ -208,10 +230,10 @@ export const ComparePage: React.FC = () => {
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-surface-200 dark:divide-surface-800">
+                  <tbody className="divide-y divide-surface-200/20 dark:divide-surface-800/20">
                     {/* Badges Highlights */}
                     <tr>
-                      <td className="p-5 font-semibold text-surface-600 bg-surface-50/30 dark:bg-surface-900/10">Highlights</td>
+                      <td className="p-5 font-semibold text-surface-600 bg-surface-50/20 dark:bg-surface-900/10">Highlights</td>
                       {result.products.map((p) => (
                         <td key={p._id} className="p-5 text-center">
                           <div className="flex flex-wrap justify-center gap-1.5">
@@ -239,7 +261,7 @@ export const ComparePage: React.FC = () => {
                       { key: 'os', label: 'Operating System' },
                     ].map((spec) => (
                       <tr key={spec.key} className="hover:bg-surface-50/20 dark:hover:bg-surface-900/10 transition-colors">
-                        <td className="p-5 font-semibold text-surface-600 bg-surface-50/30 dark:bg-surface-900/10 text-sm">
+                        <td className="p-5 font-semibold text-surface-600 bg-surface-50/20 dark:bg-surface-900/10 text-sm">
                           {spec.label}
                         </td>
                         {result.products.map((p) => {
@@ -266,17 +288,103 @@ export const ComparePage: React.FC = () => {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </motion.div>
+
+            {/* Visual Analytics Charts Grid */}
+            <motion.div 
+              variants={{
+                hidden: { opacity: 0, y: 15 },
+                show: { opacity: 1, y: 0 }
+              }}
+              className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+            >
+              {/* Price Chart */}
+              <div className="glass p-6 rounded-3xl border border-surface-200/20 dark:border-surface-800/20">
+                <h3 className="text-lg font-bold font-display text-surface-900 dark:text-white mb-6 flex items-center gap-2">
+                  <TrendingUp className="text-primary-500" size={20} /> Price Comparison (INR)
+                </h3>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={
+                      result.products.map(p => ({
+                        name: p.name.split(' ').slice(0, 3).join(' '),
+                        Price: p.price,
+                      }))
+                    } margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                      <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} />
+                      <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val / 1000}k`} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          background: 'rgba(11, 15, 25, 0.95)', 
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '16px',
+                          color: '#fff',
+                          backdropFilter: 'blur(10px)'
+                        }}
+                        formatter={(value) => [`₹${Number(value).toLocaleString('en-IN')}`, 'Price']}
+                      />
+                      <Bar dataKey="Price" radius={[8, 8, 0, 0]}>
+                        {result.products.map((p, index) => {
+                          const isBest = result.highlights.bestValue === p._id;
+                          return <Cell key={`cell-${index}`} fill={isBest ? '#10b981' : '#14b8a6'} opacity={isBest ? 1 : 0.75} />;
+                        })}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Performance Chart */}
+              <div className="glass p-6 rounded-3xl border border-surface-200/20 dark:border-surface-800/20">
+                <h3 className="text-lg font-bold font-display text-surface-900 dark:text-white mb-6 flex items-center gap-2">
+                  <Award className="text-primary-500" size={20} /> Performance Score
+                </h3>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={
+                      result.products.map(p => ({
+                        name: p.name.split(' ').slice(0, 3).join(' '),
+                        Performance: (p as any).benchmarkScore || 5000,
+                      }))
+                    } margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                      <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} />
+                      <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          background: 'rgba(11, 15, 25, 0.95)', 
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '16px',
+                          color: '#fff',
+                          backdropFilter: 'blur(10px)'
+                        }}
+                        formatter={(value) => [value, 'Score']}
+                      />
+                      <Bar dataKey="Performance" radius={[8, 8, 0, 0]}>
+                        {result.products.map((p, index) => {
+                          const isBest = result.highlights.bestPerformance === p._id;
+                          return <Cell key={`cell-${index}`} fill={isBest ? '#8b5cf6' : '#14b8a6'} opacity={isBest ? 1 : 0.75} />;
+                        })}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </motion.div>
 
             {/* AI Category Analysis Cards */}
-            <div>
-              <h2 className="text-2xl font-display font-bold mb-6 flex items-center gap-2">
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 15 },
+                show: { opacity: 1, y: 0 }
+              }}
+            >
+              <h2 className="text-2xl font-display font-bold mb-6 flex items-center gap-2 text-surface-900 dark:text-white">
                 <Sparkles className="w-5 h-5 text-primary-500 animate-pulse" />
                 AI Analysis & Recommendation
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {result.analysis.map((insight, idx) => (
-                  <div key={idx} className="glass p-6 rounded-2xl flex gap-4 border border-surface-200/50 dark:border-surface-800/30">
+                  <div key={idx} className="glass p-6 rounded-2xl flex gap-4 border border-surface-200/20 dark:border-surface-800/20 glass-hover">
                     <div className="mt-1 text-primary-500">
                       <CheckCircle size={22} className="text-emerald-500" />
                     </div>
@@ -288,7 +396,7 @@ export const ComparePage: React.FC = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
