@@ -14,28 +14,46 @@ interface CompareHighlight {
 // POST /api/compare
 export const compareProducts = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { productIds } = req.body;
+    const { productIds, productQueries, requirements } = req.body;
+
+    if (productQueries && Array.isArray(productQueries)) {
+      if (productQueries.length < 2) {
+        res.status(400).json({
+          success: false,
+          message: 'At least 2 products are required for comparison.',
+        });
+        return;
+      }
+
+      if (productQueries.length > 4) {
+        res.status(400).json({
+          success: false,
+          message: 'Maximum 4 products can be compared at once.',
+        });
+        return;
+      }
+
+      const result = await generateWebComparison(productQueries, requirements);
+
+      // Save comparison if user is authenticated
+      const authReq = req as AuthRequest;
+      if (authReq.user) {
+        await Comparison.create({
+          user: authReq.user._id,
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+      return;
+    }
 
     if (!productIds || !Array.isArray(productIds)) {
       res.status(400).json({
         success: false,
-        message: 'productIds must be an array of product IDs.',
-      });
-      return;
-    }
-
-    if (productIds.length < 2) {
-      res.status(400).json({
-        success: false,
-        message: 'At least 2 products are required for comparison.',
-      });
-      return;
-    }
-
-    if (productIds.length > 4) {
-      res.status(400).json({
-        success: false,
-        message: 'Maximum 4 products can be compared at once.',
+        message: 'productIds or productQueries must be provided.',
       });
       return;
     }

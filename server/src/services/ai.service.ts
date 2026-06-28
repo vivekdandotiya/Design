@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import mongoose from 'mongoose';
 
 interface ProductData {
   name: string;
@@ -271,6 +272,234 @@ IMPORTANT: Return ONLY valid JSON, no markdown formatting or code blocks.`;
         details: 'Selected based on benchmark score per price ratio.',
       }
     ];
+  }
+};
+
+export interface WebComparisonResult {
+  products: {
+    _id: string;
+    name: string;
+    brand: string;
+    processor: string;
+    gpu: string;
+    ram: string;
+    storage: string;
+    displaySize: string;
+    battery: string;
+    weight: string;
+    price: number;
+    os: string;
+    benchmarkScore: number;
+    rating: number;
+    reviewCount: number;
+    images: string[];
+    specs: Record<string, any>;
+  }[];
+  highlights: {
+    bestValue: string;
+    bestPerformance: string;
+    bestBattery: string;
+    mostPortable: string;
+  };
+  analysis: {
+    category: string;
+    winner: string;
+    details: string;
+  }[];
+}
+
+export const generateWebComparison = async (
+  productQueries: string[],
+  requirements: string
+): Promise<WebComparisonResult> => {
+  try {
+    const genAI = getGenAI();
+    // Using gemini-1.5-flash with Google Search grounding enabled
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      tools: [{ googleSearch: {} }]
+    } as any);
+
+    const prompt = `Search the web and find accurate, up-to-date specifications for the following products:
+${productQueries.join(', ')}
+
+Analyze them side-by-side. Additionally, consider the following user requirements and priorities:
+Requirements: ${requirements || 'None specified'}
+
+Provide your response in the following JSON format. Return ONLY the JSON object. Do not include markdown code blocks or any extra text.
+
+{
+  "products": [
+    {
+      "name": "exact full product name and model",
+      "brand": "brand name",
+      "price": 85000,
+      "processor": "processor model (e.g. Intel Core i7-1355U)",
+      "gpu": "graphics card (e.g. Intel Iris Xe or NVIDIA RTX 4050)",
+      "ram": "amount and type (e.g. 16GB LPDDR5)",
+      "storage": "storage size and type (e.g. 512GB NVMe SSD)",
+      "displaySize": "display size and characteristics (e.g. 14 inch OLED 120Hz)",
+      "battery": "battery capacity (e.g. 70 Wh)",
+      "weight": "weight (e.g. 1.35 kg)",
+      "os": "operating system",
+      "benchmarkScore": 8500,
+      "rating": 4.5,
+      "reviewCount": 120
+    }
+  ],
+  "highlights": {
+    "bestValue": "exact name of the product offering the best performance/features per rupee",
+    "bestPerformance": "exact name of the product with highest raw performance",
+    "bestBattery": "exact name of the product with longest battery life",
+    "mostPortable": "exact name of the product that is lightest and easiest to carry"
+  },
+  "analysis": [
+    {
+      "category": "Performance",
+      "winner": "exact name of the winning product in this category",
+      "details": "2-3 sentences explaining why it won and how the others compare"
+    },
+    {
+      "category": "Battery",
+      "winner": "exact name of the winning product in this category",
+      "details": "2-3 sentences explaining why it won and how the others compare"
+    },
+    {
+      "category": "Portability",
+      "winner": "exact name of the winning product in this category",
+      "details": "2-3 sentences explaining why it won and how the others compare"
+    },
+    {
+      "category": "Display",
+      "winner": "exact name of the winning product in this category",
+      "details": "2-3 sentences explaining why it won and how the others compare"
+    },
+    {
+      "category": "Value",
+      "winner": "exact name of the winning product in this category",
+      "details": "2-3 sentences explaining why it won and how the others compare"
+    }
+  ]
+}
+
+IMPORTANT: Search the web to find accurate, real details for these models. If a specific model year isn't specified, use the latest model year.`;
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text();
+
+    let cleanedText = text.trim();
+    if (cleanedText.startsWith('```json')) {
+      cleanedText = cleanedText.slice(7);
+    } else if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.slice(3);
+    }
+    if (cleanedText.endsWith('```')) {
+      cleanedText = cleanedText.slice(0, -3);
+    }
+    cleanedText = cleanedText.trim();
+
+    const parsed = JSON.parse(cleanedText);
+
+    // Map AI names to generated MongoDB ObjectIds to align with the frontend expectations
+    const productsWithIds = (parsed.products || []).map((p: any) => {
+      const id = new mongoose.Types.ObjectId().toString();
+      return {
+        _id: id,
+        name: p.name,
+        brand: p.brand || 'Unknown',
+        processor: p.processor || 'Unknown',
+        gpu: p.gpu || 'Unknown',
+        ram: p.ram || 'Unknown',
+        storage: p.storage || 'Unknown',
+        displaySize: p.displaySize || 'Unknown',
+        battery: p.battery || 'Unknown',
+        weight: p.weight || 'Unknown',
+        price: p.price || 0,
+        os: p.os || 'Unknown',
+        benchmarkScore: p.benchmarkScore || 5000,
+        rating: p.rating || 4.0,
+        reviewCount: p.reviewCount || 10,
+        images: ['https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800'],
+        specs: {}
+      };
+    });
+
+    const findProductIdByName = (name: string): string => {
+      if (!name || productsWithIds.length === 0) return '';
+      const target = name.toLowerCase().trim();
+      const exact = productsWithIds.find((p: any) => p.name.toLowerCase().trim() === target);
+      if (exact) return exact._id;
+
+      const partial = productsWithIds.find((p: any) => {
+        const pName = p.name.toLowerCase().trim();
+        return pName.includes(target) || target.includes(pName);
+      });
+      if (partial) return partial._id;
+
+      const firstWord = target.split(' ')[0];
+      const brandMatch = productsWithIds.find((p: any) => p.name.toLowerCase().trim().startsWith(firstWord));
+      if (brandMatch) return brandMatch._id;
+
+      return productsWithIds[0]._id;
+    };
+
+    const mappedHighlights = {
+      bestValue: findProductIdByName(parsed.highlights?.bestValue),
+      bestPerformance: findProductIdByName(parsed.highlights?.bestPerformance),
+      bestBattery: findProductIdByName(parsed.highlights?.bestBattery),
+      mostPortable: findProductIdByName(parsed.highlights?.mostPortable)
+    };
+
+    return {
+      products: productsWithIds,
+      highlights: mappedHighlights,
+      analysis: parsed.analysis || []
+    };
+  } catch (error) {
+    const err = error as Error;
+    console.error('AI Web Comparison Service Error:', err.message);
+
+    // Fallback comparison with ObjectIds
+    const productsWithIds = productQueries.map((q) => {
+      const id = new mongoose.Types.ObjectId().toString();
+      return {
+        _id: id,
+        name: q,
+        brand: q.split(' ')[0] || 'Generic',
+        processor: 'Intel Core i7 / Apple M3',
+        gpu: 'Integrated Graphics',
+        ram: '16GB LPDDR5',
+        storage: '512GB SSD',
+        displaySize: '14" IPS',
+        battery: '60 Wh',
+        weight: '1.4 kg',
+        price: 85000,
+        os: 'Windows / macOS',
+        benchmarkScore: 8000,
+        rating: 4.5,
+        reviewCount: 42,
+        images: ['https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800'],
+        specs: {}
+      };
+    });
+
+    return {
+      products: productsWithIds,
+      highlights: {
+        bestValue: productsWithIds[0]._id,
+        bestPerformance: productsWithIds[0]._id,
+        bestBattery: productsWithIds[0]._id,
+        mostPortable: productsWithIds[0]._id
+      },
+      analysis: [
+        {
+          category: 'Performance',
+          winner: productsWithIds[0].name,
+          details: 'Basic performance comparison. Set GEMINI_API_KEY for a real live search.'
+        }
+      ]
+    };
   }
 };
 
