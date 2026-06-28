@@ -502,3 +502,173 @@ IMPORTANT: Search the web to find accurate, real details for these models. If a 
   }
 };
 
+export interface DynamicRecommendationResult {
+  aiSummary: string;
+  strengths: string[];
+  weaknesses: string[];
+  product: any;
+  scores: {
+    performance: number;
+    battery: number;
+    portability: number;
+    value: number;
+  };
+  alternatives: any[];
+}
+
+export const generateDynamicRecommendation = async (
+  userPreferences: UserPreferences
+): Promise<DynamicRecommendationResult> => {
+  try {
+    const genAI = getGenAI();
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    const prompt = `You are an AI tech advisor. Search the web and find the top 3 best laptops that fit the following user preferences:
+- Budget: ${userPreferences.budget ? `₹${userPreferences.budget.toLocaleString('en-IN')}` : 'Not specified'}
+- Purpose: ${userPreferences.purpose || 'General use'}
+- Priorities: ${userPreferences.priorities?.join(', ') || 'Not specified'}
+
+Identify the single best laptop as the winner, and return 2 other laptops as alternatives.
+
+Provide your response in the following JSON format. Return ONLY the JSON object. Do not include markdown code blocks or extra text.
+
+{
+  "aiSummary": "A detailed 3-4 sentence explanation of why the winner was chosen for this user.",
+  "strengths": ["strength 1", "strength 2", "strength 3"],
+  "weaknesses": ["weakness 1", "weakness 2"],
+  "product": {
+    "name": "exact winner product name",
+    "brand": "brand name",
+    "price": 85000,
+    "processor": "processor model",
+    "gpu": "graphics card",
+    "ram": "16GB LPDDR5",
+    "storage": "512GB SSD",
+    "displaySize": "14 inch OLED",
+    "battery": "70 Wh",
+    "weight": "1.35 kg",
+    "os": "Windows / macOS",
+    "benchmarkScore": 8500,
+    "rating": 4.5,
+    "reviewCount": 120
+  },
+  "scores": {
+    "performance": 85,
+    "battery": 75,
+    "portability": 80,
+    "value": 90
+  },
+  "alternatives": [
+    {
+      "name": "alternative product name 1",
+      "brand": "brand name",
+      "price": 75000,
+      "processor": "processor model",
+      "gpu": "graphics card",
+      "ram": "16GB LPDDR5",
+      "storage": "512GB SSD",
+      "displaySize": "15.6 inch IPS",
+      "battery": "60 Wh",
+      "weight": "1.7 kg",
+      "os": "Windows",
+      "benchmarkScore": 7500,
+      "rating": 4.2,
+      "reviewCount": 90
+    }
+  ]
+}
+
+IMPORTANT: Search the web to find accurate, real details for these models.`;
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text();
+
+    let cleanedText = text.trim();
+    if (cleanedText.startsWith('```json')) {
+      cleanedText = cleanedText.slice(7);
+    } else if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.slice(3);
+    }
+    if (cleanedText.endsWith('```')) {
+      cleanedText = cleanedText.slice(0, -3);
+    }
+    cleanedText = cleanedText.trim();
+
+    const parsed = JSON.parse(cleanedText);
+
+    // Map fields and generate IDs
+    const mapProduct = (p: any) => ({
+      _id: new mongoose.Types.ObjectId().toString(),
+      name: p.name,
+      brand: p.brand || 'Generic',
+      processor: p.processor || 'Unknown',
+      gpu: p.gpu || 'Unknown',
+      ram: p.ram || 'Unknown',
+      storage: p.storage || 'Unknown',
+      displaySize: p.displaySize || 'Unknown',
+      battery: p.battery || 'Unknown',
+      weight: p.weight || 'Unknown',
+      price: p.price || 0,
+      os: p.os || 'Unknown',
+      benchmarkScore: p.benchmarkScore || 5000,
+      rating: p.rating || 4.2,
+      reviewCount: p.reviewCount || 50,
+      images: ['https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800'],
+      specs: {}
+    });
+
+    return {
+      aiSummary: parsed.aiSummary || 'No summary available.',
+      strengths: parsed.strengths || [],
+      weaknesses: parsed.weaknesses || [],
+      product: mapProduct(parsed.product),
+      scores: {
+        performance: clampScore(parsed.scores?.performance),
+        battery: clampScore(parsed.scores?.battery),
+        portability: clampScore(parsed.scores?.portability),
+        value: clampScore(parsed.scores?.value)
+      },
+      alternatives: (parsed.alternatives || []).map(mapProduct)
+    };
+  } catch (error) {
+    const err = error as Error;
+    console.error('AI Recommendation Service Error:', err.message);
+
+    // Fallback recommendation
+    const winner = {
+      _id: new mongoose.Types.ObjectId().toString(),
+      name: 'HP Victus 15',
+      brand: 'HP',
+      processor: 'Intel Core i5-12450H',
+      gpu: 'RTX 3050',
+      ram: '16GB',
+      storage: '512GB SSD',
+      displaySize: '15.6"',
+      battery: '52.5 Wh',
+      weight: '2.3 kg',
+      price: 62990,
+      os: 'Windows 11',
+      benchmarkScore: 8200,
+      rating: 4.2,
+      reviewCount: 342,
+      images: ['https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800'],
+      specs: {}
+    };
+
+    return {
+      aiSummary: 'A solid all-rounder budget gaming and study laptop offering excellent price-to-performance ratio.',
+      strengths: ['Great dedicated GPU for gaming', 'Decent screen refresh rate'],
+      weaknesses: ['Slightly heavy at 2.3kg', 'Average battery life'],
+      product: winner,
+      scores: {
+        performance: 75,
+        battery: 60,
+        portability: 50,
+        value: 85
+      },
+      alternatives: []
+    };
+  }
+};
+
