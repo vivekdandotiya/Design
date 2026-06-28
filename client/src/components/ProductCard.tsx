@@ -36,13 +36,12 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
       <Link to={`/products/${product._id}`} className="block group">
         <div
           className={cn(
-            'card overflow-hidden transition-all duration-300',
-            'hover:-translate-y-0.5 hover:shadow-md',
+            'glass glass-hover overflow-hidden transition-all duration-300',
             selected && 'ring-2 ring-primary-500 dark:ring-primary-400'
           )}
         >
           {/* Image */}
-          <div className="relative aspect-[4/3] bg-surface-50 dark:bg-surface-800 overflow-hidden">
+          <div className="relative aspect-[4/3] bg-surface-100/30 dark:bg-surface-900/30 border-b border-surface-200/20 dark:border-surface-800/20 overflow-hidden">
             {product.image ? (
               <img
                 src={product.image}

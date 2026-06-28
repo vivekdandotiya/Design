@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { Zap, Globe, Mail } from 'lucide-react';
 
 const footerLinks = [
-  { label: 'Products', to: '/products' },
   { label: 'Compare', to: '/compare' },
   { label: 'Recommend', to: '/recommend' },
   { label: 'About', to: '/' },
@@ -10,7 +9,7 @@ const footerLinks = [
 
 export default function Footer() {
   return (
-    <footer className="relative bg-surface-50 dark:bg-surface-950 border-t border-surface-200 dark:border-surface-800">
+    <footer className="relative bg-surface-50 dark:bg-surface-950/60 border-t border-surface-200 dark:border-surface-800/40 backdrop-blur-md">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-surface-100/50 dark:to-black/30 pointer-events-none" />
       <div className="container-wide relative py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">

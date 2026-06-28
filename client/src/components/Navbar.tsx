@@ -33,7 +33,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-40 w-full border-b border-surface-200/50 dark:border-surface-800/50 bg-white/80 dark:bg-surface-950/80 backdrop-blur-xl">
+    <nav className="sticky top-0 z-40 w-full border-b border-surface-200/25 dark:border-surface-800/25 bg-white/30 dark:bg-surface-950/30 backdrop-blur-3xl">
       <div className="container-wide">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
