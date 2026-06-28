@@ -36,7 +36,7 @@ export const RecommendPage: React.FC = () => {
     setLoading(true);
     try {
       const res = await api.post('/recommend', formData);
-      setResult(res.data);
+      setResult(res.data.data);
       setStep(4); // Results step
     } catch (error) {
       console.error('Recommendation failed', error);

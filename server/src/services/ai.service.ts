@@ -187,3 +187,90 @@ function estimateValueScore(price: number, benchmark: number): number {
   const ratio = benchmark / price;
   return Math.max(0, Math.min(100, Math.round(ratio * 5000)));
 }
+
+export interface AIComparisonAnalysis {
+  category: string;
+  winner: string;
+  details: string;
+}
+
+export const generateComparisonAnalysis = async (
+  products: ProductData[]
+): Promise<AIComparisonAnalysis[]> => {
+  try {
+    const genAI = getGenAI();
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    const productDescriptions = products
+      .map(
+        (p, i) =>
+          `Product ${i + 1}: ${p.name}
+  - Brand: ${p.brand}
+  - Processor: ${p.processor}
+  - GPU: ${p.gpu}
+  - RAM: ${p.ram}
+  - Storage: ${p.storage}
+  - Display: ${p.display}
+  - Battery: ${p.battery}
+  - Weight: ${p.weight}
+  - Price: ₹${p.price.toLocaleString('en-IN')}
+  - OS: ${p.os}
+  - Benchmark Score: ${p.benchmarkScore}
+  - User Rating: ${p.rating}/5`
+      )
+      .join('\n\n');
+
+    const prompt = `You are a tech expert comparing these laptops side-by-side. Analyze their specifications (Performance, Battery, Portability, Display, Value) and determine a winner and detailed comparison for each category.
+    
+PRODUCTS TO ANALYZE:
+${productDescriptions}
+
+Provide your analysis in the following JSON format. Return a JSON array with one object per category (Performance, Battery, Portability, Display, Value):
+
+[
+  {
+    "category": "Performance",
+    "winner": "exact name of the winning product",
+    "details": "2-3 sentences explaining why it won and how it compares to the others"
+  }
+]
+
+IMPORTANT: Return ONLY valid JSON, no markdown formatting or code blocks.`;
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text();
+
+    let cleanedText = text.trim();
+    if (cleanedText.startsWith('```json')) {
+      cleanedText = cleanedText.slice(7);
+    } else if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.slice(3);
+    }
+    if (cleanedText.endsWith('```')) {
+      cleanedText = cleanedText.slice(0, -3);
+    }
+    cleanedText = cleanedText.trim();
+
+    const parsed: AIComparisonAnalysis[] = JSON.parse(cleanedText);
+    return parsed;
+  } catch (error) {
+    const err = error as Error;
+    console.error('AI Comparison Service Error:', err.message);
+
+    // Fallback comparison
+    return [
+      {
+        category: 'Performance',
+        winner: products.reduce((prev, current) => (prev.benchmarkScore > current.benchmarkScore ? prev : current)).name,
+        details: 'Selected based on benchmark score comparison.',
+      },
+      {
+        category: 'Value',
+        winner: products.reduce((prev, current) => ((prev.benchmarkScore / prev.price) > (current.benchmarkScore / current.price) ? prev : current)).name,
+        details: 'Selected based on benchmark score per price ratio.',
+      }
+    ];
+  }
+};
+

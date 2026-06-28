@@ -29,8 +29,8 @@ export const ProductDetailPage: React.FC = () => {
           api.get(`/products/${id}`),
           api.get(`/reviews/product/${id}`)
         ]);
-        setProduct(prodRes.data);
-        setReviews(revRes.data);
+        setProduct(prodRes.data.data);
+        setReviews(revRes.data.data);
         if (user && user.savedProducts.includes(id as string)) {
           setIsSaved(true);
         }

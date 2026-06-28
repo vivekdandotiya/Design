@@ -2,16 +2,16 @@ import { Request, Response } from 'express';
 import Product from '../models/Product';
 import Comparison from '../models/Comparison';
 import { AuthRequest } from '../middleware/auth';
+import { generateComparisonAnalysis } from '../services/ai.service';
 
 interface CompareHighlight {
   bestValue: string;
   bestPerformance: string;
   bestBattery: string;
-  bestPortability: string;
+  mostPortable: string;
 }
 
 // POST /api/compare
-// TODO: Integrate Gemini AI to generate structured side-by-side product analysis
 export const compareProducts = async (req: Request, res: Response): Promise<void> => {
   try {
     const { productIds } = req.body;
@@ -55,7 +55,7 @@ export const compareProducts = async (req: Request, res: Response): Promise<void
       bestValue: '',
       bestPerformance: '',
       bestBattery: '',
-      bestPortability: '',
+      mostPortable: '',
     };
 
     // Best value: highest benchmark per rupee
@@ -64,7 +64,7 @@ export const compareProducts = async (req: Request, res: Response): Promise<void
       const ratio = p.price > 0 ? p.benchmarkScore / p.price : 0;
       if (ratio > bestValueRatio) {
         bestValueRatio = ratio;
-        highlights.bestValue = p.name;
+        highlights.bestValue = p._id.toString();
       }
     });
 
@@ -73,7 +73,7 @@ export const compareProducts = async (req: Request, res: Response): Promise<void
     products.forEach((p) => {
       if (p.benchmarkScore > bestBenchmark) {
         bestBenchmark = p.benchmarkScore;
-        highlights.bestPerformance = p.name;
+        highlights.bestPerformance = p._id.toString();
       }
     });
 
@@ -85,7 +85,7 @@ export const compareProducts = async (req: Request, res: Response): Promise<void
         const wh = parseInt(whMatch[1]);
         if (wh > bestBatteryWh) {
           bestBatteryWh = wh;
-          highlights.bestBattery = p.name;
+          highlights.bestBattery = p._id.toString();
         }
       }
     });
@@ -98,7 +98,7 @@ export const compareProducts = async (req: Request, res: Response): Promise<void
         const weight = parseFloat(weightMatch[1]);
         if (weight < lightestWeight) {
           lightestWeight = weight;
-          highlights.bestPortability = p.name;
+          highlights.mostPortable = p._id.toString();
         }
       }
     });
@@ -124,6 +124,9 @@ export const compareProducts = async (req: Request, res: Response): Promise<void
       specs: p.specs,
     }));
 
+    // Generate AI side-by-side comparison analysis
+    const analysis = await generateComparisonAnalysis(products);
+
     // Save comparison if user is authenticated
     const authReq = req as AuthRequest;
     if (authReq.user) {
@@ -138,6 +141,7 @@ export const compareProducts = async (req: Request, res: Response): Promise<void
       data: {
         products: comparisonData,
         highlights,
+        analysis,
         comparedAt: new Date(),
       },
     });
@@ -146,3 +150,4 @@ export const compareProducts = async (req: Request, res: Response): Promise<void
     res.status(500).json({ success: false, message: err.message });
   }
 };
+

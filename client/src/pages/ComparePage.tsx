@@ -19,7 +19,7 @@ export const ComparePage: React.FC = () => {
     setComparing(true);
     try {
       const res = await api.post('/compare', { productIds: selectedProducts.map(p => p._id) });
-      setResult(res.data);
+      setResult(res.data.data);
     } catch (error) {
       console.error('Comparison failed', error);
     } finally {

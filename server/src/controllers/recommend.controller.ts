@@ -69,12 +69,36 @@ export const getRecommendation = async (req: Request, res: Response): Promise<vo
 
     const recommendations = await generateRecommendation(productData, userPreferences);
 
+    // Find the recommendation with the highest overallScore
+    let bestRec = recommendations[0];
+    if (recommendations.length > 1) {
+      recommendations.forEach((r) => {
+        if (r.recommendation.overallScore > bestRec.recommendation.overallScore) {
+          bestRec = r;
+        }
+      });
+    }
+
+    // Find the corresponding product model
+    const winningProduct = products.find((p) => p.name === bestRec.productName) || products[0];
+
+    // Find the alternatives
+    const alternatives = products.filter((p) => p._id.toString() !== winningProduct._id.toString());
+
     res.status(200).json({
       success: true,
       data: {
-        products: products.map((p) => p.toObject()),
-        recommendations,
-        userPreferences,
+        aiSummary: bestRec.recommendation.summary,
+        strengths: bestRec.recommendation.strengths,
+        weaknesses: bestRec.recommendation.weaknesses,
+        product: winningProduct.toObject(),
+        scores: {
+          performance: bestRec.recommendation.scores.performance,
+          battery: bestRec.recommendation.scores.battery,
+          portability: bestRec.recommendation.scores.portability,
+          value: bestRec.recommendation.scores.value,
+        },
+        alternatives: alternatives.map((p) => p.toObject()),
       },
     });
   } catch (error) {
@@ -82,3 +106,4 @@ export const getRecommendation = async (req: Request, res: Response): Promise<vo
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
