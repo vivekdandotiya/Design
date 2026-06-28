@@ -316,9 +316,8 @@ export const generateWebComparison = async (
     const genAI = getGenAI();
     // Using gemini-1.5-flash with Google Search grounding enabled
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      tools: [{ googleSearch: {} }]
-    } as any);
+      model: 'gemini-1.5-flash'
+    });
 
     const prompt = `Search the web and find accurate, up-to-date specifications for the following products:
 ${productQueries.join(', ')}
