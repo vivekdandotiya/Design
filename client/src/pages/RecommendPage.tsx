@@ -207,7 +207,7 @@ export const RecommendPage: React.FC = () => {
         )}
         
         <div className="text-center pb-8">
-          <button onClick={() => setStep(1)} className="btn-secondary">Start Over</button>
+          <button onClick={() => { setResult(null); setStep(1); }} className="btn-secondary">Start Over</button>
         </div>
       </motion.div>
     );
@@ -217,14 +217,14 @@ export const RecommendPage: React.FC = () => {
     <div className="section container-narrow py-12 mt-16 min-h-[80vh]">
       {step < 4 && (
         <div className="mb-12">
-          <div className="flex justify-between text-sm font-medium text-surface-400 mb-4">
-            <span className={step >= 1 ? 'text-primary-600' : ''}>Budget</span>
-            <span className={step >= 2 ? 'text-primary-600' : ''}>Purpose</span>
-            <span className={step >= 3 ? 'text-primary-600' : ''}>Priorities</span>
+          <div className="flex justify-between text-sm font-semibold text-surface-400 mb-4">
+            <span className={step >= 1 ? 'text-primary-600 dark:text-primary-400' : ''}>Budget</span>
+            <span className={step >= 2 ? 'text-primary-600 dark:text-primary-400' : ''}>Purpose</span>
+            <span className={step >= 3 ? 'text-primary-600 dark:text-primary-400' : ''}>Priorities</span>
           </div>
-          <div className="h-2 bg-surface-200 rounded-full overflow-hidden">
+          <div className="h-2 bg-surface-250 dark:bg-surface-800 rounded-full overflow-hidden">
             <motion.div 
-              className="h-full bg-primary-500"
+              className="h-full bg-gradient-to-r from-primary-500 to-accent-violet shadow-glow"
               initial={{ width: '33%' }}
               animate={{ width: `${(step / 3) * 100}%` }}
               transition={{ duration: 0.3 }}
@@ -233,11 +233,11 @@ export const RecommendPage: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-white dark:bg-surface-900 rounded-3xl shadow-sm border border-surface-200 dark:border-surface-800 p-8 md:p-12 relative overflow-hidden">
+      <div className="glass rounded-3xl p-8 md:p-12 relative overflow-hidden">
         {loading && step === 3 && (
-          <div className="absolute inset-0 bg-white/80 dark:bg-surface-900/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
-            <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mb-4" />
-            <h3 className="text-xl font-bold font-display text-gradient">AI is analyzing options...</h3>
+          <div className="absolute inset-0 bg-white/70 dark:bg-surface-900/70 backdrop-blur-md z-10 flex flex-col items-center justify-center">
+            <div className="w-12 h-12 border-3 border-primary-200 border-t-primary-600 rounded-full animate-spin mb-4" />
+            <h3 className="text-xl font-bold font-display text-gradient">AI is searching and analyzing options...</h3>
           </div>
         )}
         
