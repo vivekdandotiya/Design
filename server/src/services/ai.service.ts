@@ -312,6 +312,10 @@ export interface WebComparisonResult {
     reviewCount: number;
     images: string[];
     specs: Record<string, any>;
+    category?: string;
+    storePrices?: { store: string; price: number; url: string }[];
+    lowestPriceStore?: string;
+    lowestPrice?: number;
   }[];
   highlights: {
     bestValue: string;
@@ -332,69 +336,89 @@ export const generateWebComparison = async (
 ): Promise<WebComparisonResult> => {
   try {
 
-    const prompt = `Search the web and find accurate, up-to-date specifications for the following products:
+    const prompt = `You are a professional product comparison and price-finding engine. Search the web and find accurate specs and real-time prices for these products:
 ${productQueries.join(', ')}
 
-Analyze them side-by-side. Additionally, consider the following user requirements and priorities:
-Requirements: ${requirements || 'None specified'}
+For EACH product, you must search and find the current price in INR on major Indian e-commerce stores: Amazon, Flipkart, Meesho, Myntra, and Ajio. If a product is not listed on a store or not applicable, set its price to 0 and url to "".
 
-Provide your response in the following JSON format. Return ONLY the JSON object. Do not include markdown code blocks or any extra text.
+USER PREFERENCES / REQUIREMENTS:
+${requirements || 'None specified'}
+
+Provide your response in the following JSON format. Return ONLY the valid JSON object. Do not include markdown code blocks (such as \`\`\`json) or extra text.
 
 {
   "products": [
     {
       "name": "exact full product name and model",
       "brand": "brand name",
-      "price": 85000,
-      "processor": "processor model (e.g. Intel Core i7-1355U)",
-      "gpu": "graphics card (e.g. Intel Iris Xe or NVIDIA RTX 4050)",
-      "ram": "amount and type (e.g. 16GB LPDDR5)",
-      "storage": "storage size and type (e.g. 512GB NVMe SSD)",
-      "displaySize": "display size and characteristics (e.g. 14 inch OLED 120Hz)",
-      "battery": "battery capacity (e.g. 70 Wh)",
-      "weight": "weight (e.g. 1.35 kg)",
-      "os": "operating system",
-      "benchmarkScore": 8500,
+      "price": 85000, // Best overall representative price in INR
+      "category": "category of product (e.g. Laptop, Smart TV, Refrigerator, Shoes, Washing Machine)",
+      
+      // Dynamic specs dictionary containing 5-8 key technical specifications for this category of product
+      "specs": {
+        "Spec Name 1": "Value 1",
+        "Spec Name 2": "Value 2",
+        "Spec Name 3": "Value 3",
+        "Spec Name 4": "Value 4"
+      },
+      
+      // Store prices comparison in Indian Rupees (INR)
+      "storePrices": [
+        { "store": "Amazon", "price": 85000, "url": "https://www.amazon.in/s?k=product+name" },
+        { "store": "Flipkart", "price": 87000, "url": "https://www.flipkart.com/search?q=product+name" },
+        { "store": "Meesho", "price": 0, "url": "" },
+        { "store": "Myntra", "price": 0, "url": "" },
+        { "store": "Ajio", "price": 0, "url": "" }
+      ],
+      "lowestPriceStore": "Amazon", // Name of the store offering the lowest non-zero price
+      "lowestPrice": 85000,
+      
+      // Laptops fields fallback (for compatibility - if laptop, put values. If not laptop, put "N/A")
+      "processor": "Processor (for laptops only, else N/A)",
+      "gpu": "Graphics (for laptops only, else N/A)",
+      "ram": "RAM (for laptops only, else N/A)",
+      "storage": "Storage (for laptops only, else N/A)",
+      "displaySize": "Display Size (for laptops only, else N/A)",
+      "battery": "Battery (for laptops/devices only, else N/A)",
+      "weight": "Weight (e.g. 1.35 kg or 65 kg)",
+      "os": "Operating System (if applicable, else N/A)",
+      
+      "benchmarkScore": 85, // Rating score from 0 to 100 representing product quality/specs power
       "rating": 4.5,
       "reviewCount": 120
     }
   ],
   "highlights": {
-    "bestValue": "exact name of the product offering the best performance/features per rupee",
-    "bestPerformance": "exact name of the product with highest raw performance",
-    "bestBattery": "exact name of the product with longest battery life",
-    "mostPortable": "exact name of the product that is lightest and easiest to carry"
+    "bestValue": "exact name of the winning product",
+    "bestPerformance": "exact name of the winning product",
+    "bestBattery": "exact name of the winning product",
+    "mostPortable": "exact name of the winning product"
   },
   "analysis": [
     {
-      "category": "Performance",
-      "winner": "exact name of the winning product in this category",
+      "category": "Performance / Core Specs",
+      "winner": "exact name of the winning product",
       "details": "2-3 sentences explaining why it won and how the others compare"
     },
     {
-      "category": "Battery",
-      "winner": "exact name of the winning product in this category",
+      "category": "Efficiency / Durability",
+      "winner": "exact name of the winning product",
       "details": "2-3 sentences explaining why it won and how the others compare"
     },
     {
-      "category": "Portability",
-      "winner": "exact name of the winning product in this category",
+      "category": "Portability / Compactness",
+      "winner": "exact name of the winning product",
       "details": "2-3 sentences explaining why it won and how the others compare"
     },
     {
-      "category": "Display",
-      "winner": "exact name of the winning product in this category",
-      "details": "2-3 sentences explaining why it won and how the others compare"
-    },
-    {
-      "category": "Value",
-      "winner": "exact name of the winning product in this category",
+      "category": "Value for Money",
+      "winner": "exact name of the winning product",
       "details": "2-3 sentences explaining why it won and how the others compare"
     }
   ]
 }
 
-IMPORTANT: Search the web to find accurate, real details for these models. If a specific model year isn't specified, use the latest model year.`;
+IMPORTANT: Search the web to find accurate, real details and store listings for these models.`;
 
     const text = await callGeminiAPI(prompt);
 
@@ -411,27 +435,52 @@ IMPORTANT: Search the web to find accurate, real details for these models. If a 
 
     const parsed = JSON.parse(cleanedText);
 
+    const getCategoryImage = (category: string): string => {
+      const cat = (category || '').toLowerCase();
+      if (cat.includes('laptop') || cat.includes('computer')) {
+        return 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800';
+      }
+      if (cat.includes('tv') || cat.includes('television') || cat.includes('screen') || cat.includes('display')) {
+        return 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=800';
+      }
+      if (cat.includes('phone') || cat.includes('mobile') || cat.includes('smartphone')) {
+        return 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800';
+      }
+      if (cat.includes('shoe') || cat.includes('clothing') || cat.includes('sneaker') || cat.includes('wear')) {
+        return 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800';
+      }
+      if (cat.includes('fridge') || cat.includes('refrigerator') || cat.includes('washing') || cat.includes('machine') || cat.includes('appliance')) {
+        return 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800';
+      }
+      return 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800'; // General
+    };
+
     // Map AI names to generated MongoDB ObjectIds to align with the frontend expectations
     const productsWithIds = (parsed.products || []).map((p: any) => {
       const id = new mongoose.Types.ObjectId().toString();
+      const category = p.category || 'laptop';
       return {
         _id: id,
         name: p.name,
         brand: p.brand || 'Unknown',
-        processor: p.processor || 'Unknown',
-        gpu: p.gpu || 'Unknown',
-        ram: p.ram || 'Unknown',
-        storage: p.storage || 'Unknown',
-        displaySize: p.displaySize || 'Unknown',
-        battery: p.battery || 'Unknown',
-        weight: p.weight || 'Unknown',
+        category,
+        processor: p.processor || 'N/A',
+        gpu: p.gpu || 'N/A',
+        ram: p.ram || 'N/A',
+        storage: p.storage || 'N/A',
+        displaySize: p.displaySize || 'N/A',
+        battery: p.battery || 'N/A',
+        weight: p.weight || 'N/A',
         price: p.price || 0,
-        os: p.os || 'Unknown',
-        benchmarkScore: p.benchmarkScore || 5000,
-        rating: p.rating || 4.0,
+        os: p.os || 'N/A',
+        benchmarkScore: p.benchmarkScore || 85,
+        rating: p.rating || 4.5,
         reviewCount: p.reviewCount || 10,
-        images: ['https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800'],
-        specs: {}
+        images: p.images || [getCategoryImage(category)],
+        specs: p.specs || {},
+        storePrices: p.storePrices || [],
+        lowestPriceStore: p.lowestPriceStore || '',
+        lowestPrice: p.lowestPrice || 0
       };
     });
 

@@ -51,6 +51,10 @@ export interface Product {
   };
   tags: string[];
   inStock: boolean;
+  specs?: Record<string, string>;
+  storePrices?: { store: string; price: number; url: string }[];
+  lowestPriceStore?: string;
+  lowestPrice?: number;
   createdAt: string;
   updatedAt: string;
 }
