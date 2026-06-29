@@ -13,6 +13,24 @@ export const ComparePage: React.FC = () => {
   const [comparing, setComparing] = useState(false);
   const [result, setResult] = useState<CompareResult | null>(null);
 
+  const isElectronics = result
+    ? result.products.some(p => {
+        const cat = (p as any).category?.toLowerCase() || '';
+        return cat.includes('laptop') || 
+               cat.includes('phone') || 
+               cat.includes('tv') || 
+               cat.includes('computer') || 
+               cat.includes('device') || 
+               cat.includes('camera') || 
+               cat.includes('headphone') || 
+               cat.includes('refrigerator') ||
+               cat.includes('fridge') ||
+               cat.includes('washing') ||
+               cat.includes('appliance') ||
+               cat.includes('gadget');
+      })
+    : false;
+
   const handleAddQuery = () => {
     if (queries.length < 4) {
       setQueries([...queries, '']);
@@ -243,19 +261,27 @@ export const ComparePage: React.FC = () => {
                     {/* Badges Highlights */}
                     <tr>
                       <td className="p-5 font-semibold text-surface-600 bg-surface-50/20 dark:bg-surface-900/10">Highlights</td>
-                      {result.products.map((p) => (
-                        <td key={p._id} className="p-5 text-center">
-                          <div className="flex flex-wrap justify-center gap-1.5">
-                            {result.highlights.bestValue === p._id && <Badge variant="success">Best Value</Badge>}
-                            {result.highlights.bestPerformance === p._id && <Badge variant="primary">Top Performance</Badge>}
-                            {result.highlights.bestBattery === p._id && <Badge variant="warning">Best Battery</Badge>}
-                            {result.highlights.mostPortable === p._id && <Badge variant="outline">Most Portable</Badge>}
-                            {Object.values(result.highlights).every((id) => id !== p._id) && (
-                              <span className="text-xs text-surface-400">-</span>
-                            )}
-                          </div>
-                        </td>
-                      ))}
+                      {result.products.map((p) => {
+                        const hasAnyBadge = result.highlights.bestValue === p._id ||
+                                           (isElectronics && (
+                                             result.highlights.bestPerformance === p._id ||
+                                             result.highlights.bestBattery === p._id ||
+                                             result.highlights.mostPortable === p._id
+                                           ));
+                        return (
+                          <td key={p._id} className="p-5 text-center">
+                            <div className="flex flex-wrap justify-center gap-1.5">
+                              {result.highlights.bestValue === p._id && <Badge variant="success">Best Value</Badge>}
+                              {isElectronics && result.highlights.bestPerformance === p._id && <Badge variant="primary">Top Performance</Badge>}
+                              {isElectronics && result.highlights.bestBattery === p._id && <Badge variant="warning">Best Battery</Badge>}
+                              {isElectronics && result.highlights.mostPortable === p._id && <Badge variant="outline">Most Portable</Badge>}
+                              {!hasAnyBadge && (
+                                <span className="text-xs text-surface-400">-</span>
+                              )}
+                            </div>
+                          </td>
+                        );
+                      })}
                     </tr>
 
                     {/* Store Prices / E-Commerce Comparison Row */}
@@ -364,7 +390,7 @@ export const ComparePage: React.FC = () => {
               className="grid grid-cols-1 lg:grid-cols-2 gap-8"
             >
               {/* Price Chart */}
-              <div className="glass p-6 rounded-3xl border border-surface-200/20 dark:border-surface-800/20">
+              <div className="glass p-6 rounded-3xl border border-surface-200/20 dark:border-surface-800/20 shadow-glass">
                 <h3 className="text-lg font-bold font-display text-surface-900 dark:text-white mb-6 flex items-center gap-2">
                   <TrendingUp className="text-primary-500" size={20} /> Price Comparison (INR)
                 </h3>
@@ -399,41 +425,80 @@ export const ComparePage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Performance Chart */}
-              <div className="glass p-6 rounded-3xl border border-surface-200/20 dark:border-surface-800/20">
-                <h3 className="text-lg font-bold font-display text-surface-900 dark:text-white mb-6 flex items-center gap-2">
-                  <Award className="text-primary-500" size={20} /> Performance Score
-                </h3>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={
-                      result.products.map(p => ({
-                        name: p.name.split(' ').slice(0, 3).join(' '),
-                        Performance: (p as any).benchmarkScore || 5000,
-                      }))
-                    } margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                      <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} />
-                      <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
-                      <Tooltip 
-                        contentStyle={{ 
-                          background: 'rgba(11, 15, 25, 0.95)', 
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          borderRadius: '16px',
-                          color: '#fff',
-                          backdropFilter: 'blur(10px)'
-                        }}
-                        formatter={(value) => [value, 'Score']}
-                      />
-                      <Bar dataKey="Performance" radius={[8, 8, 0, 0]}>
-                        {result.products.map((p, index) => {
-                          const isBest = result.highlights.bestPerformance === p._id;
-                          return <Cell key={`cell-${index}`} fill={isBest ? '#8b5cf6' : '#14b8a6'} opacity={isBest ? 1 : 0.75} />;
-                        })}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+              {/* Performance Chart (Electronics Only) */}
+              {isElectronics && (
+                <div className="glass p-6 rounded-3xl border border-surface-200/20 dark:border-surface-800/20 shadow-glass">
+                  <h3 className="text-lg font-bold font-display text-surface-900 dark:text-white mb-6 flex items-center gap-2">
+                    <Award className="text-primary-500" size={20} /> Performance Score
+                  </h3>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={
+                        result.products.map(p => ({
+                          name: p.name.split(' ').slice(0, 3).join(' '),
+                          Performance: (p as any).benchmarkScore || 5000,
+                        }))
+                      } margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                        <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} />
+                        <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
+                        <Tooltip 
+                          contentStyle={{ 
+                            background: 'rgba(11, 15, 25, 0.95)', 
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '16px',
+                            color: '#fff',
+                            backdropFilter: 'blur(10px)'
+                          }}
+                          formatter={(value) => [value, 'Score']}
+                        />
+                        <Bar dataKey="Performance" radius={[8, 8, 0, 0]}>
+                          {result.products.map((p, index) => {
+                            const isBest = result.highlights.bestPerformance === p._id;
+                            return <Cell key={`cell-${index}`} fill={isBest ? '#8b5cf6' : '#14b8a6'} opacity={isBest ? 1 : 0.75} />;
+                          })}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Rating Chart (Non-Electronics Only) */}
+              {!isElectronics && (
+                <div className="glass p-6 rounded-3xl border border-surface-200/20 dark:border-surface-800/20 shadow-glass">
+                  <h3 className="text-lg font-bold font-display text-surface-900 dark:text-white mb-6 flex items-center gap-2">
+                    <Award className="text-primary-500" size={20} /> User Rating (Stars)
+                  </h3>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={
+                        result.products.map(p => ({
+                          name: p.name.split(' ').slice(0, 3).join(' '),
+                          Rating: p.rating || 4.5,
+                        }))
+                      } margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                        <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} />
+                        <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} domain={[0, 5]} />
+                        <Tooltip 
+                          contentStyle={{ 
+                            background: 'rgba(11, 15, 25, 0.95)', 
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '16px',
+                            color: '#fff',
+                            backdropFilter: 'blur(10px)'
+                          }}
+                          formatter={(value) => [`${value} Stars`, 'Rating']}
+                        />
+                        <Bar dataKey="Rating" radius={[8, 8, 0, 0]}>
+                          {result.products.map((_, index) => {
+                            return <Cell key={`cell-${index}`} fill="#f59e0b" opacity={0.8} />;
+                          })}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
             </motion.div>
 
             {/* AI Category Analysis Cards */}
@@ -442,24 +507,34 @@ export const ComparePage: React.FC = () => {
                 hidden: { opacity: 0, y: 15 },
                 show: { opacity: 1, y: 0 }
               }}
+              className="space-y-6"
             >
-              <h2 className="text-2xl font-display font-bold mb-6 flex items-center gap-2 text-surface-900 dark:text-white">
+              <h2 className="text-2xl font-display font-bold flex items-center gap-2 text-surface-900 dark:text-white">
                 <Sparkles className="w-5 h-5 text-primary-500 animate-pulse" />
-                AI Analysis & Recommendation
+                AI Analysis & Verdict
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {result.analysis.map((insight, idx) => (
-                  <div key={idx} className="glass p-6 rounded-2xl flex gap-4 border border-surface-200/20 dark:border-surface-800/20 glass-hover">
-                    <div className="mt-1 text-primary-500">
-                      <CheckCircle size={22} className="text-emerald-500" />
+              
+              <div className="glass rounded-3xl p-6 md:p-8 border border-surface-200/30 dark:border-surface-800/30 shadow-glass space-y-6">
+                <div className="border-b border-surface-200/20 pb-4">
+                  <h3 className="text-xl font-bold font-display text-surface-900 dark:text-white flex items-center gap-2">
+                    <CheckCircle className="text-emerald-500" size={22} /> Comparison Verdict & Highlights
+                  </h3>
+                  <p className="text-xs text-surface-500 mt-1">Ground-truth web comparison analyzed dynamically by Gemini AI.</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+                  {result.analysis.map((insight, idx) => (
+                    <div key={idx} className="space-y-2 border-l-2 border-primary-500/30 pl-4 hover:border-primary-500 transition-colors duration-250">
+                      <h4 className="font-bold text-base text-surface-900 dark:text-white flex items-center gap-1.5">
+                        {insight.category}
+                      </h4>
+                      <div className="text-xs font-semibold text-primary-600 dark:text-primary-400">
+                        Category Winner: <span className="underline font-bold">{insight.winner}</span>
+                      </div>
+                      <p className="text-surface-500 text-sm leading-relaxed pt-0.5">{insight.details}</p>
                     </div>
-                    <div className="space-y-1">
-                      <h4 className="font-bold text-lg text-surface-900 dark:text-white">{insight.category}</h4>
-                      <p className="text-xs font-semibold text-primary-600 dark:text-primary-400">Winner: {insight.winner}</p>
-                      <p className="text-surface-500 text-sm leading-relaxed pt-1.5">{insight.details}</p>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </motion.div>
           </motion.div>
