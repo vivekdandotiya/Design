@@ -22,8 +22,8 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 
   initialize: () => {
     const stored = localStorage.getItem('cw-theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const isDark = stored ? stored === 'dark' : prefersDark;
+    // Default to light mode unless explicitly saved as dark
+    const isDark = stored === 'dark';
     set({ isDark });
     if (isDark) {
       document.documentElement.classList.add('dark');
