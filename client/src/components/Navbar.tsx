@@ -41,17 +41,21 @@ export default function Navbar() {
     navigate('/');
   };
 
-  const navClass = isScrolled
-    ? "fixed top-0 left-0 w-full z-50 rounded-none border-b border-surface-200/30 dark:border-surface-800/30 bg-white/80 dark:bg-surface-950/80 backdrop-blur-3xl shadow-glass-lg transition-all duration-300 py-0"
-    : "fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-5xl rounded-full border border-surface-200/20 dark:border-surface-800/20 bg-white/50 dark:bg-surface-900/50 backdrop-blur-3xl shadow-glass transition-all duration-300 py-1";
-
-  const containerClass = isScrolled
-    ? "container-wide flex items-center justify-between h-16 w-full"
-    : "w-full flex items-center justify-between h-12 px-6";
-
   return (
-    <nav className={navClass}>
-      <div className={containerClass}>
+    <div className={cn(
+      "fixed left-0 w-full z-50 flex justify-center pointer-events-none transition-all duration-300",
+      isScrolled ? "top-0 py-0" : "top-4 py-0"
+    )}>
+      <motion.nav
+        layout
+        transition={{ type: 'spring', stiffness: 220, damping: 26 }}
+        className={cn(
+          "pointer-events-auto flex items-center justify-between transition-colors duration-300",
+          isScrolled
+            ? "w-full h-16 px-6 border-b border-surface-200/30 dark:border-surface-800/30 bg-white/90 dark:bg-surface-950/80 backdrop-blur-3xl shadow-glass-lg rounded-none"
+            : "w-[90%] max-w-5xl h-12 px-6 border border-surface-200/20 dark:border-surface-800/20 bg-white/80 dark:bg-surface-900/50 backdrop-blur-3xl shadow-glass rounded-full"
+        )}
+      >
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-accent-violet flex items-center justify-center">
@@ -169,7 +173,6 @@ export default function Navbar() {
               )}
             </button>
           </div>
-        </div>
 
       {/* Mobile Menu */}
       <AnimatePresence>
@@ -238,6 +241,7 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-    </nav>
+    </motion.nav>
+  </div>
   );
 }

@@ -59,7 +59,7 @@
 @layer components {
   /* Glass morphism card */
   .glass {
-    @apply bg-white/70 dark:bg-surface-900/40 backdrop-blur-xl border border-surface-200/20 dark:border-surface-800/20 shadow-glass;
+    @apply bg-white/90 dark:bg-surface-900/40 backdrop-blur-xl border border-surface-200/20 dark:border-surface-800/20 shadow-glass;
   }
 
   /* Glass interactive hover */
@@ -125,9 +125,9 @@
 
   /* Card styles */
   .card {
-    @apply bg-white/40 dark:bg-surface-900/30 rounded-2xl border border-surface-200/20 dark:border-surface-800/20
-           shadow-glass hover:shadow-glass-lg hover:border-surface-300/30 dark:hover:border-surface-700/30 
-           transition-all duration-300 backdrop-blur-md;
+    @apply bg-white dark:bg-surface-900/50 rounded-2xl border border-surface-200/40 dark:border-surface-800/40
+           shadow-glass hover:shadow-glass-lg hover:border-surface-300/40 dark:hover:border-surface-700/40 
+           transition-all duration-300;
   }
 
   /* Badge styles */
