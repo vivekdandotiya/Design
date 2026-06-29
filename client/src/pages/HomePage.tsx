@@ -262,6 +262,17 @@ export default function HomePage() {
               </FadeInSection>
             ))}
           </div>
+
+          {/* Illustrative mock of how it works */}
+          <FadeInSection className="mt-16 text-center">
+            <div className="glass rounded-3xl p-4 max-w-4xl mx-auto shadow-glass overflow-hidden border border-surface-200/20 dark:border-surface-800/20 hover:shadow-glass-lg transition-all duration-300">
+              <img 
+                src="/src/assets/how_it_works.png" 
+                alt="How CompareWise works illustration" 
+                className="w-full h-auto rounded-2xl object-cover hover:scale-[1.01] transition-transform duration-500"
+              />
+            </div>
+          </FadeInSection>
         </div>
       </section>
 

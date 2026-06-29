@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -22,9 +22,18 @@ const navLinks = [
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { user, isAuthenticated, logout } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -32,10 +41,17 @@ export default function Navbar() {
     navigate('/');
   };
 
+  const navClass = isScrolled
+    ? "fixed top-0 left-0 w-full z-50 rounded-none border-b border-surface-200/30 dark:border-surface-800/30 bg-white/80 dark:bg-surface-950/80 backdrop-blur-3xl shadow-glass-lg transition-all duration-300 py-0"
+    : "fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-5xl rounded-full border border-surface-200/20 dark:border-surface-800/20 bg-white/50 dark:bg-surface-900/50 backdrop-blur-3xl shadow-glass transition-all duration-300 py-1";
+
+  const containerClass = isScrolled
+    ? "container-wide flex items-center justify-between h-16 w-full"
+    : "w-full flex items-center justify-between h-12 px-6";
+
   return (
-    <nav className="sticky top-0 z-40 w-full border-b border-surface-200/25 dark:border-surface-800/25 bg-white/30 dark:bg-surface-950/30 backdrop-blur-3xl">
-      <div className="container-wide">
-        <div className="flex items-center justify-between h-16">
+    <nav className={navClass}>
+      <div className={containerClass}>
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-accent-violet flex items-center justify-center">
@@ -154,7 +170,6 @@ export default function Navbar() {
             </button>
           </div>
         </div>
-      </div>
 
       {/* Mobile Menu */}
       <AnimatePresence>
