@@ -91,7 +91,7 @@ export const ComparePage: React.FC = () => {
               </div>
               <h1 className="text-4xl font-display font-bold tracking-tight">AI Web Comparison</h1>
               <p className="text-surface-500 mt-3 max-w-lg mx-auto">
-                Type the names or model numbers of the laptops you wish to compare. The AI will search the web, compile specifications, and analyze the fit.
+                Type the names or model numbers of any products you wish to compare. The AI will search the web, compile specifications, and compare prices.
               </p>
             </div>
 
@@ -99,7 +99,7 @@ export const ComparePage: React.FC = () => {
               {/* Product Inputs */}
               <div className="space-y-4">
                 <label className="block text-sm font-semibold text-surface-900 dark:text-white">
-                  Laptops to Compare (2 - 4)
+                  Products to Compare (2 - 4)
                 </label>
                 <div className="grid gap-4">
                   {queries.map((query, index) => (
@@ -109,7 +109,7 @@ export const ComparePage: React.FC = () => {
                           type="text"
                           value={query}
                           onChange={(e) => handleQueryChange(index, e.target.value)}
-                          placeholder={`e.g. MacBook Air M3 13" or Dell XPS 13 9340...`}
+                          placeholder={`e.g. Redmi 15 5G, H&M Trousers, Sony Bravia 55" TV...`}
                           className="input-field pr-10"
                         />
                         <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-surface-400 select-none">
@@ -120,7 +120,7 @@ export const ComparePage: React.FC = () => {
                         <button
                           onClick={() => handleRemoveQuery(index)}
                           className="p-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-colors"
-                          title="Remove laptop"
+                          title="Remove product"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -134,7 +134,7 @@ export const ComparePage: React.FC = () => {
                     onClick={handleAddQuery}
                     className="inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors mt-2"
                   >
-                    <Plus size={16} /> Add another laptop
+                    <Plus size={16} /> Add another product
                   </button>
                 )}
               </div>
@@ -147,7 +147,7 @@ export const ComparePage: React.FC = () => {
                 <textarea
                   value={requirements}
                   onChange={(e) => setRequirements(e.target.value)}
-                  placeholder="e.g. I need a laptop for computer science studies, coding, and light gaming. My budget is under ₹1,00,000, and I value battery life and portability."
+                  placeholder="e.g. I want to check which one offers the lowest rate across stores, or particular custom options that suit my daily usage."
                   rows={4}
                   className="input-field resize-none"
                 />

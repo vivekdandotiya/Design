@@ -20,7 +20,7 @@ export default function Footer() {
                 <Zap className="w-4 h-4 text-white" />
               </div>
               <span className="text-xl font-bold font-display text-surface-900 dark:text-white">
-                Compare<span className="text-gradient">Wise</span>
+                Product<span className="text-gradient">Lens</span>
               </span>
             </Link>
             <p className="text-sm text-surface-500 dark:text-surface-400 max-w-sm leading-relaxed">
@@ -72,7 +72,7 @@ export default function Footer() {
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-surface-200 dark:border-surface-800 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-surface-400 dark:text-surface-500">
-            © {new Date().getFullYear()} CompareWise AI. All rights reserved.
+            © {new Date().getFullYear()} ProductLens AI. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-xs text-surface-400 dark:text-surface-500">
             <a href="#" className="hover:text-surface-600 dark:hover:text-surface-300 transition-colors">

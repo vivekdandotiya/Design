@@ -45,7 +45,7 @@ export const AuthPage: React.FC = () => {
             <div className="w-8 h-8 rounded bg-gradient-to-br from-primary-500 to-accent-violet flex items-center justify-center shadow-glow">
               <Sparkles size={18} className="text-white" />
             </div>
-            <span className="font-display font-bold text-xl tracking-tight text-white">CompareWise<span className="text-primary-400">.ai</span></span>
+            <span className="font-display font-bold text-xl tracking-tight text-white">ProductLens<span className="text-primary-400">.ai</span></span>
           </div>
           
           <motion.div

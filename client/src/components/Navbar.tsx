@@ -62,7 +62,7 @@ export default function Navbar() {
               <Zap className="w-4 h-4 text-white" />
             </div>
             <span className="text-xl font-bold font-display text-surface-900 dark:text-white">
-              Compare<span className="text-gradient">Wise</span>
+              Product<span className="text-gradient">Lens</span>
             </span>
           </Link>
 

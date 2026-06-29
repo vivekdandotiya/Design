@@ -150,7 +150,7 @@ export default function HomePage() {
               </h1>
 
               <p className="text-lg text-surface-500 dark:text-surface-400 max-w-lg leading-relaxed">
-                Compare laptops side-by-side with AI-driven insights. Get personalized recommendations based on your needs, budget, and priorities.
+                Compare products side-by-side with AI-driven insights. Get personalized recommendations based on your needs, budget, and priorities.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
@@ -208,7 +208,7 @@ export default function HomePage() {
               How It Works
             </h2>
             <p className="text-surface-500 dark:text-surface-400 max-w-2xl mx-auto">
-              Three simple steps to find your perfect laptop. No more endless scrolling through spec sheets.
+              Three simple steps to find your perfect product. No more endless scrolling through spec sheets.
             </p>
           </FadeInSection>
 
@@ -218,7 +218,7 @@ export default function HomePage() {
                 icon: Search,
                 title: 'Search & Discover',
                 description:
-                  'Browse our extensive catalog of laptops. Filter by brand, specs, price, and more to find exactly what you need.',
+                  'Browse our extensive catalog of products. Filter by brand, specs, price, and more to find exactly what you need.',
                 color: 'from-primary-500 to-accent-blue',
                 step: '01',
               },
@@ -268,7 +268,7 @@ export default function HomePage() {
             <div className="glass rounded-3xl p-4 max-w-4xl mx-auto shadow-glass overflow-hidden border border-surface-200/20 dark:border-surface-800/20 hover:shadow-glass-lg transition-all duration-300">
               <img 
                 src="/src/assets/how_it_works.png" 
-                alt="How CompareWise works illustration" 
+                alt="How ProductLens works illustration" 
                 className="w-full h-auto rounded-2xl object-cover hover:scale-[1.01] transition-transform duration-500"
               />
             </div>
@@ -286,7 +286,7 @@ export default function HomePage() {
                   Top Rated Products
                 </h2>
                 <p className="text-surface-500 dark:text-surface-400">
-                  Highest rated laptops chosen by our community
+                  Highest rated products chosen by our community
                 </p>
               </div>
               <Link
@@ -354,7 +354,7 @@ export default function HomePage() {
               Loved by Thousands
             </h2>
             <p className="text-surface-500 dark:text-surface-400 max-w-2xl mx-auto">
-              See what users say about how CompareWise helped them make better decisions.
+              See what users say about how ProductLens helped them make better decisions.
             </p>
           </FadeInSection>
 
@@ -362,13 +362,13 @@ export default function HomePage() {
             {[
               {
                 quote:
-                  'I saved over ₹15,000 by finding a better-specced laptop at a lower price. The comparison tool is incredibly detailed.',
+                  'I saved over ₹15,000 by finding a better-specced product at a lower price. The comparison tool is incredibly detailed.',
                 name: 'Priya Sharma',
                 role: 'Software Engineer',
               },
               {
                 quote:
-                  'The AI recommendation nailed it. I described what I needed, and it picked the exact laptop I ended up buying.',
+                  'The AI recommendation nailed it. I described what I needed, and it picked the exact product I ended up buying.',
                 name: 'Rohit Mehta',
                 role: 'Content Creator',
               },
@@ -417,10 +417,10 @@ export default function HomePage() {
 
               <div className="relative px-8 py-16 md:py-20 text-center space-y-6">
                 <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold font-display text-white">
-                  Ready to Find Your Perfect Laptop?
+                  Ready to Find Your Perfect Product?
                 </h2>
                 <p className="text-lg text-white/80 max-w-xl mx-auto">
-                  Join thousands of smart shoppers who use CompareWise to make data-driven purchasing decisions.
+                  Join thousands of smart shoppers who use ProductLens to make data-driven purchasing decisions.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                   <Link
