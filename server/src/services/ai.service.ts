@@ -44,7 +44,7 @@ export interface AIProductRecommendation {
   recommendation: AIRecommendation;
 }
 
-const callGeminiAPI = async (prompt: string, modelName: string = 'gemini-2.5-flash'): Promise<string> => {
+const callGeminiAPI = async (prompt: string, modelName: string = 'gemini-1.5-flash'): Promise<string> => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY environment variable is not set');
@@ -696,8 +696,27 @@ IMPORTANT: Search the web to find accurate, real details for these models.`;
     const err = error as Error;
     console.error('AI Recommendation Service Error:', err.message);
 
-    // Fallback recommendation
-    const winner = {
+    const isPhone = userPreferences.category === 'phone';
+
+    const winner = isPhone ? {
+      _id: new mongoose.Types.ObjectId().toString(),
+      name: 'Samsung Galaxy S24',
+      brand: 'Samsung',
+      processor: 'Exynos 2400',
+      gpu: 'Xclipse 940',
+      ram: '8GB',
+      storage: '256GB',
+      displaySize: '6.2"',
+      battery: '4000 mAh',
+      weight: '167g',
+      price: 74900,
+      os: 'Android 14',
+      benchmarkScore: 9200,
+      rating: 4.5,
+      reviewCount: 218,
+      images: ['https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=800'],
+      specs: {}
+    } : {
       _id: new mongoose.Types.ObjectId().toString(),
       name: 'HP Victus 15',
       brand: 'HP',
@@ -718,11 +737,22 @@ IMPORTANT: Search the web to find accurate, real details for these models.`;
     };
 
     return {
-      aiSummary: 'A solid all-rounder budget gaming and study laptop offering excellent price-to-performance ratio.',
-      strengths: ['Great dedicated GPU for gaming', 'Decent screen refresh rate'],
-      weaknesses: ['Slightly heavy at 2.3kg', 'Average battery life'],
+      aiSummary: isPhone 
+        ? 'A high-performance compact smartphone offering superb display quality, solid battery efficiency, and premium cameras.'
+        : 'A solid all-rounder budget gaming and study laptop offering excellent price-to-performance ratio.',
+      strengths: isPhone
+        ? ['Stunning Dynamic AMOLED display', 'Comfortable lightweight design', 'Excellent triple camera system']
+        : ['Great dedicated GPU for gaming', 'Decent screen refresh rate'],
+      weaknesses: isPhone
+        ? ['Charging speed capped at 25W', 'Slight thermal heating under sustained gaming load']
+        : ['Slightly heavy at 2.3kg', 'Average battery life'],
       product: winner,
-      scores: {
+      scores: isPhone ? {
+        performance: 90,
+        battery: 80,
+        portability: 95,
+        value: 85
+      } : {
         performance: 75,
         battery: 60,
         portability: 50,
