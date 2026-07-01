@@ -103,8 +103,8 @@ export default {
         },
       },
       boxShadow: {
-        'glass': '0 12px 28px -3px rgba(0, 0, 0, 0.16), 0 4px 12px -2px rgba(0, 0, 0, 0.08)',
-        'glass-lg': '0 30px 60px -12px rgba(0, 0, 0, 0.24), 0 10px 24px -4px rgba(0, 0, 0, 0.12)',
+        'glass': '0 20px 40px -4px rgba(0, 0, 0, 0.16), 0 8px 16px -4px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04)',
+        'glass-lg': '0 32px 64px -10px rgba(0, 0, 0, 0.20), 0 12px 28px -10px rgba(0, 0, 0, 0.10), 0 0 0 1px rgba(0, 0, 0, 0.04)',
         'glow': '0 0 25px rgba(139, 92, 246, 0.20)',
         'glow-lg': '0 0 50px rgba(139, 92, 246, 0.30)',
         'inner-glow': 'inset 0 1px 0 rgba(255, 255, 255, 0.15)',
