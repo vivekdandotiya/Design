@@ -7,7 +7,6 @@ import {
   BarChart3,
   CheckCircle,
   Sparkles,
-  Star,
   Quote,
   Monitor,
 } from 'lucide-react';
@@ -34,68 +33,288 @@ function FadeInSection({ children, className = '' }: { children: React.ReactNode
 }
 
 /* ─────────── Hero Floating Laptop SVG ─────────── */
-function FloatingLaptop() {
+/* ─────────── Interactive 3D Canvas Illustration ─────────── */
+function HeroIllustration3D() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationId: number;
+    const width = 600;
+    const height = 450;
+    
+    // Set high DPI canvas resolution
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left - width / 2;
+      const y = e.clientY - rect.top - height / 2;
+      mouseRef.current.targetX = (x / (width / 2)) * 0.45;
+      mouseRef.current.targetY = (y / (height / 2)) * 0.45;
+    };
+
+    const handleMouseLeave = () => {
+      mouseRef.current.targetX = 0;
+      mouseRef.current.targetY = 0;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mouseleave', handleMouseLeave);
+
+    let angleX = 0.2;
+    let angleY = 0.6;
+    let time = 0;
+
+    // 3D Projection Helper
+    const project = (x: number, y: number, z: number) => {
+      const cosY = Math.cos(angleY);
+      const sinY = Math.sin(angleY);
+      const x1 = x * cosY - z * sinY;
+      const z1 = x * sinY + z * cosY;
+
+      const cosX = Math.cos(angleX);
+      const sinX = Math.sin(angleX);
+      const y2 = y * cosX - z1 * sinX;
+      const z2 = y * sinX + z1 * cosX;
+
+      const fov = 500;
+      const scale = fov / (fov + z2);
+      return {
+        x: width / 2 + x1 * scale,
+        y: height / 2 + y2 * scale,
+        z: z2,
+        scale: scale
+      };
+    };
+
+    // Draw Rounded projected Polygon
+    const drawProjectedCard = (
+      cx: number, cy: number, cz: number,
+      w: number, h: number,
+      bgColor: string, borderColor: string,
+      title: string, price: string,
+      barHeights: number[],
+      winner: boolean
+    ) => {
+      const halfW = w / 2;
+      const halfH = h / 2;
+      const corners = [
+        { x: cx - halfW, y: cy - halfH, z: cz },
+        { x: cx + halfW, y: cy - halfH, z: cz },
+        { x: cx + halfW, y: cy + halfH, z: cz },
+        { x: cx - halfW, y: cy + halfH, z: cz }
+      ];
+
+      const projected = corners.map(c => project(c.x, c.y, c.z));
+
+      // Draw shadow
+      ctx.beginPath();
+      projected.forEach((p, i) => {
+        if (i === 0) ctx.moveTo(p.x, p.y + 20);
+        else ctx.lineTo(p.x, p.y + 20);
+      });
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+      ctx.filter = 'blur(16px)';
+      ctx.fill();
+      ctx.filter = 'none';
+
+      // Draw card body
+      ctx.beginPath();
+      projected.forEach((p, i) => {
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.closePath();
+      ctx.fillStyle = bgColor;
+      ctx.fill();
+
+      // Card border
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      const scale = projected[0].scale;
+      const origin = projected[0];
+      
+      const dxX = (projected[1].x - projected[0].x) / w;
+      const dxY = (projected[1].y - projected[0].y) / w;
+      const dyX = (projected[3].x - projected[0].x) / h;
+      const dyY = (projected[3].y - projected[0].y) / h;
+
+      const drawText3D = (text: string, localX: number, localY: number, font: string, color: string) => {
+        const px = origin.x + localX * dxX + localY * dyX;
+        const py = origin.y + localX * dxY + localY * dyY;
+        
+        ctx.save();
+        ctx.translate(px, py);
+        
+        const skewAngleX = Math.atan2(dxY, dxX);
+        const skewAngleY = Math.atan2(dyX, dyY);
+        ctx.transform(1, skewAngleX, skewAngleY, 1, 0, 0);
+
+        ctx.fillStyle = color;
+        ctx.font = font;
+        ctx.fillText(text, 0, 0);
+        ctx.restore();
+      };
+
+      drawText3D(title, 20, 30, `bold ${Math.round(14 * scale)}px Inter, sans-serif`, '#0f172a');
+      drawText3D(price, 20, 52, `bold ${Math.round(16 * scale)}px Inter, sans-serif`, winner ? '#10b981' : '#6366f1');
+
+      // Draw stats lines
+      const lineY = [70, 85, 100];
+      lineY.forEach(ly => {
+        ctx.beginPath();
+        const start = { x: origin.x + 20 * dxX + ly * dyX, y: origin.y + 20 * dxY + ly * dyY };
+        const end = { x: origin.x + (w - 20) * dxX + ly * dyX, y: origin.y + (w - 20) * dxY + ly * dyY };
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(end.x, end.y);
+        ctx.strokeStyle = 'rgba(15, 23, 42, 0.06)';
+        ctx.lineWidth = 3 * scale;
+        ctx.stroke();
+      });
+
+      // Bar charts
+      barHeights.forEach((bh, idx) => {
+        const bx = 20 + idx * 25;
+        const by = h - 20;
+        const start = { x: origin.x + bx * dxX + by * dyX, y: origin.y + bx * dxY + by * dyY };
+        const end = { x: origin.x + bx * dxX + (by - bh) * dyX, y: origin.y + bx * dxY + (by - bh) * dyY };
+        
+        ctx.beginPath();
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(end.x, end.y);
+        ctx.strokeStyle = winner ? 'rgba(16, 185, 129, 0.8)' : 'rgba(99, 102, 241, 0.6)';
+        ctx.lineWidth = 12 * scale;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      });
+    };
+
+    // Draw central Octahedron Glass Lens
+    const drawGlassLens = (cx: number, cy: number, cz: number, r: number) => {
+      const vertices = [
+        { x: cx, y: cy - r, z: cz },
+        { x: cx - r, y: cy, z: cz - r },
+        { x: cx + r, y: cy, z: cz - r },
+        { x: cx + r, y: cy, z: cz + r },
+        { x: cx - r, y: cy, z: cz + r },
+        { x: cx, y: cy + r, z: cz }
+      ];
+
+      const projected = vertices.map(v => project(v.x, v.y, v.z));
+
+      const faces = [
+        [0, 1, 2], [0, 2, 3], [0, 3, 4], [0, 4, 1],
+        [5, 2, 1], [5, 3, 2], [5, 4, 3], [5, 1, 4]
+      ];
+
+      const sortedFaces = faces.map(f => {
+        const z = (projected[f[0]].z + projected[f[1]].z + projected[f[2]].z) / 3;
+        return { indices: f, z };
+      }).sort((a, b) => b.z - a.z);
+
+      sortedFaces.forEach(face => {
+        const p1 = projected[face.indices[0]];
+        const p2 = projected[face.indices[1]];
+        const p3 = projected[face.indices[2]];
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.lineTo(p3.x, p3.y);
+        ctx.closePath();
+
+        const grad = ctx.createLinearGradient(p1.x, p1.y, p3.x, p3.y);
+        grad.addColorStop(0, 'rgba(139, 92, 246, 0.28)');
+        grad.addColorStop(1, 'rgba(6, 182, 212, 0.28)');
+
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+    };
+
+    const loop = () => {
+      mouseRef.current.x += (mouseRef.current.targetX - mouseRef.current.x) * 0.1;
+      mouseRef.current.y += (mouseRef.current.targetY - mouseRef.current.y) * 0.1;
+
+      angleY = time * 0.3 + mouseRef.current.x;
+      angleX = 0.2 + Math.sin(time * 0.15) * 0.08 + mouseRef.current.y;
+
+      ctx.clearRect(0, 0, width, height);
+
+      // Draw background glow base
+      const glowGrad = ctx.createRadialGradient(width/2, height/2, 20, width/2, height/2, 240);
+      glowGrad.addColorStop(0, 'rgba(139, 92, 246, 0.06)');
+      glowGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = glowGrad;
+      ctx.fillRect(0, 0, width, height);
+
+      const items = [
+        {
+          type: 'card',
+          z: Math.sin(angleY) * 160,
+          draw: () => drawProjectedCard(
+            -110, Math.sin(time * 1.5) * 10, Math.cos(angleY) * 160,
+            160, 190,
+            'rgba(255, 255, 255, 0.95)', 'rgba(15, 23, 42, 0.08)',
+            'Brand Alpha', '₹64,990',
+            [30, 45, 55],
+            false
+          )
+        },
+        {
+          type: 'card',
+          z: Math.sin(angleY + Math.PI) * 160,
+          draw: () => drawProjectedCard(
+            110, Math.sin(time * 1.5 + Math.PI) * 10, Math.cos(angleY + Math.PI) * 160,
+            160, 190,
+            'rgba(255, 255, 255, 0.98)', 'rgba(16, 185, 129, 0.15)',
+            'Brand Beta', '₹58,990',
+            [50, 65, 80],
+            true
+          )
+        },
+        {
+          type: 'lens',
+          z: 0,
+          draw: () => drawGlassLens(0, Math.cos(time * 1.5) * 6, 0, 60)
+        }
+      ];
+
+      items.sort((a, b) => b.z - a.z);
+      items.forEach(item => item.draw());
+
+      time += 0.02;
+      animationId = requestAnimationFrame(loop);
+    };
+
+    loop();
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
+
   return (
-    <motion.div
-      animate={{ y: [0, -16, 0] }}
-      transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-      className="relative"
-    >
-      <div className="relative w-72 h-48 md:w-96 md:h-64">
-        {/* Glow */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 via-accent-violet/20 to-accent-blue/20 rounded-3xl blur-3xl" />
-
-        {/* Laptop body */}
-        <svg viewBox="0 0 400 280" className="relative w-full h-full" fill="none">
-          {/* Screen */}
-          <rect x="60" y="20" width="280" height="175" rx="12" className="fill-surface-800 dark:fill-surface-700" />
-          <rect x="70" y="30" width="260" height="155" rx="6" className="fill-surface-900 dark:fill-surface-800" />
-
-          {/* Screen content lines */}
-          <rect x="90" y="55" width="100" height="6" rx="3" className="fill-primary-500/60" />
-          <rect x="90" y="70" width="160" height="4" rx="2" className="fill-surface-600" />
-          <rect x="90" y="82" width="140" height="4" rx="2" className="fill-surface-600" />
-          <rect x="90" y="94" width="120" height="4" rx="2" className="fill-surface-600" />
-
-          {/* Chart bars */}
-          <rect x="90" y="130" width="30" height="40" rx="4" className="fill-accent-emerald/50" />
-          <rect x="130" y="115" width="30" height="55" rx="4" className="fill-primary-500/50" />
-          <rect x="170" y="125" width="30" height="45" rx="4" className="fill-accent-violet/50" />
-          <rect x="210" y="105" width="30" height="65" rx="4" className="fill-accent-blue/50" />
-          <rect x="250" y="120" width="30" height="50" rx="4" className="fill-accent-amber/50" />
-
-          {/* Camera dot */}
-          <circle cx="200" cy="26" r="2" className="fill-surface-600" />
-
-          {/* Base */}
-          <path d="M30 195 L60 195 L60 195 Q60 200 65 205 L335 205 Q340 200 340 195 L370 195 L380 210 Q385 220 375 220 L25 220 Q15 220 20 210 Z" className="fill-surface-700 dark:fill-surface-600" />
-          <ellipse cx="200" cy="210" rx="60" ry="3" className="fill-surface-600 dark:fill-surface-500" />
-        </svg>
-
-        {/* Floating elements */}
-        <motion.div
-          animate={{ y: [0, -8, 0], x: [0, 4, 0] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-          className="absolute -top-4 -right-4 w-12 h-12 rounded-xl bg-gradient-to-br from-accent-emerald to-accent-cyan flex items-center justify-center shadow-lg"
-        >
-          <CheckCircle className="w-6 h-6 text-white" />
-        </motion.div>
-        <motion.div
-          animate={{ y: [0, 8, 0], x: [0, -4, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-          className="absolute -bottom-2 -left-6 w-10 h-10 rounded-lg bg-gradient-to-br from-accent-amber to-accent-rose flex items-center justify-center shadow-lg"
-        >
-          <Star className="w-5 h-5 text-white" />
-        </motion.div>
-        <motion.div
-          animate={{ y: [0, -6, 0] }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
-          className="absolute top-8 -left-8 w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-accent-violet flex items-center justify-center shadow-lg"
-        >
-          <Sparkles className="w-4 h-4 text-white" />
-        </motion.div>
-      </div>
-    </motion.div>
+    <div className="relative w-full max-w-[600px] h-[450px] mx-auto filter drop-shadow-[0_20px_40px_rgba(0,0,0,0.06)] rounded-3xl overflow-hidden bg-transparent">
+      <canvas ref={canvasRef} className="w-full h-full block cursor-grab active:cursor-grabbing" />
+    </div>
   );
 }
 
@@ -165,7 +384,7 @@ export default function HomePage() {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="w-full flex justify-center mt-12 max-w-2xl"
           >
-            <FloatingLaptop />
+            <HeroIllustration3D />
           </motion.div>
         </div>
       </section>
