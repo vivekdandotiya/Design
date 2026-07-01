@@ -7,6 +7,7 @@ import ProductCard from '../components/ProductCard';
 import ScoreGauge from '../components/ScoreGauge';
 import Badge from '../components/Badge';
 import type { RecommendationRequest, RecommendationResult } from '../types';
+import { cn } from '../lib/utils';
 
 const purposes = [
   { id: 'development', label: 'Development', icon: Monitor, desc: 'Coding, VMs, Docker' },
@@ -58,7 +59,7 @@ export const RecommendPage: React.FC = () => {
           step="5000"
           value={formData.budget}
           onChange={(e) => setFormData({...formData, budget: parseInt(e.target.value)})}
-          className="w-full h-3 bg-surface-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
+          className="w-full h-2 bg-surface-200 dark:bg-surface-800 rounded-lg appearance-none cursor-pointer accent-primary-900 dark:accent-primary-400"
         />
         <div className="text-center mt-8">
           <span className="text-5xl font-display font-bold text-gradient">
@@ -68,7 +69,7 @@ export const RecommendPage: React.FC = () => {
       </div>
       
       <div className="flex justify-end">
-        <button onClick={handleNext} className="btn-primary">Next <ArrowRight size={18} /></button>
+        <button onClick={handleNext} className="btn-primary shadow-sm hover:shadow">Next <ArrowRight size={18} /></button>
       </div>
     </motion.div>
   );
@@ -76,7 +77,7 @@ export const RecommendPage: React.FC = () => {
   const renderStep2 = () => (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
       <h2 className="text-3xl font-display font-bold mb-2">Primary Purpose</h2>
-      <p className="text-surface-500 mb-8">What will you use this laptop for mostly?</p>
+      <p className="text-surface-500 mb-8">What will you use this product for mostly?</p>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {purposes.map(p => {
@@ -86,13 +87,14 @@ export const RecommendPage: React.FC = () => {
             <button
               key={p.id}
               onClick={() => setFormData({...formData, purpose: p.id})}
-              className={`p-6 rounded-2xl border text-left transition-all ${
+              className={cn(
+                "p-6 rounded-2xl border text-left transition-all duration-300 hover:-translate-y-0.5 shadow-sm hover:shadow",
                 isSelected 
-                  ? 'border-primary-500 bg-primary-50/50 dark:bg-primary-900/20 shadow-glow' 
-                  : 'border-surface-200 dark:border-surface-700 hover:border-primary-300'
-              }`}
+                  ? 'border-primary-900 dark:border-primary-400 bg-white dark:bg-surface-900 ring-2 ring-primary-500/20' 
+                  : 'border-surface-200/60 dark:border-surface-800 bg-white dark:bg-surface-900/40 hover:border-primary-300'
+              )}
             >
-              <Icon className={`mb-4 ${isSelected ? 'text-primary-500' : 'text-surface-400'}`} size={32} />
+              <Icon className={`mb-4 ${isSelected ? 'text-primary-900 dark:text-primary-400' : 'text-surface-400'}`} size={32} />
               <h3 className="font-bold text-lg mb-1">{p.label}</h3>
               <p className="text-sm text-surface-500">{p.desc}</p>
             </button>
@@ -102,7 +104,7 @@ export const RecommendPage: React.FC = () => {
       
       <div className="flex justify-between">
         <button onClick={handlePrev} className="btn-ghost"><ArrowLeft size={18} /> Back</button>
-        <button onClick={handleNext} disabled={!formData.purpose} className="btn-primary">Next <ArrowRight size={18} /></button>
+        <button onClick={handleNext} disabled={!formData.purpose} className="btn-primary shadow-sm hover:shadow">Next <ArrowRight size={18} /></button>
       </div>
     </motion.div>
   );
@@ -115,30 +117,30 @@ export const RecommendPage: React.FC = () => {
       <div className="space-y-8 mb-12">
         <div>
           <div className="flex justify-between mb-2">
-            <label className="font-medium">Battery Life Importance</label>
-            <span className="text-primary-600 font-bold">{formData.batteryImportance}%</span>
+            <label className="font-medium text-surface-700 dark:text-surface-300">Battery Life Importance</label>
+            <span className="text-primary-900 dark:text-primary-300 font-bold">{formData.batteryImportance}%</span>
           </div>
-          <input type="range" min="0" max="100" value={formData.batteryImportance} onChange={e => setFormData({...formData, batteryImportance: parseInt(e.target.value)})} className="w-full accent-primary-600" />
+          <input type="range" min="0" max="100" value={formData.batteryImportance} onChange={e => setFormData({...formData, batteryImportance: parseInt(e.target.value)})} className="w-full h-2 bg-surface-200 dark:bg-surface-800 rounded-lg appearance-none cursor-pointer accent-primary-900 dark:accent-primary-400" />
         </div>
         <div>
           <div className="flex justify-between mb-2">
-            <label className="font-medium">Portability (Weight & Size)</label>
-            <span className="text-primary-600 font-bold">{formData.portability}%</span>
+            <label className="font-medium text-surface-700 dark:text-surface-300">Portability (Weight & Size)</label>
+            <span className="text-primary-900 dark:text-primary-300 font-bold">{formData.portability}%</span>
           </div>
-          <input type="range" min="0" max="100" value={formData.portability} onChange={e => setFormData({...formData, portability: parseInt(e.target.value)})} className="w-full accent-primary-600" />
+          <input type="range" min="0" max="100" value={formData.portability} onChange={e => setFormData({...formData, portability: parseInt(e.target.value)})} className="w-full h-2 bg-surface-200 dark:bg-surface-800 rounded-lg appearance-none cursor-pointer accent-primary-900 dark:accent-primary-400" />
         </div>
         <div>
           <div className="flex justify-between mb-2">
-            <label className="font-medium">Gaming Capability</label>
-            <span className="text-primary-600 font-bold">{formData.gaming}%</span>
+            <label className="font-medium text-surface-700 dark:text-surface-300">Gaming Capability</label>
+            <span className="text-primary-900 dark:text-primary-300 font-bold">{formData.gaming}%</span>
           </div>
-          <input type="range" min="0" max="100" value={formData.gaming} onChange={e => setFormData({...formData, gaming: parseInt(e.target.value)})} className="w-full accent-primary-600" />
+          <input type="range" min="0" max="100" value={formData.gaming} onChange={e => setFormData({...formData, gaming: parseInt(e.target.value)})} className="w-full h-2 bg-surface-200 dark:bg-surface-800 rounded-lg appearance-none cursor-pointer accent-primary-900 dark:accent-primary-400" />
         </div>
       </div>
       
       <div className="flex justify-between">
         <button onClick={handlePrev} className="btn-ghost"><ArrowLeft size={18} /> Back</button>
-        <button onClick={handleSubmit} disabled={loading} className="btn-primary">
+        <button onClick={handleSubmit} disabled={loading} className="btn-primary shadow-sm hover:shadow">
           {loading ? 'Analyzing...' : <><Sparkles size={18} /> Get Recommendation</>}
         </button>
       </div>
@@ -155,12 +157,11 @@ export const RecommendPage: React.FC = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 items-start">
-          <div className="glass p-8 rounded-3xl relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-500/10 to-accent-violet/10 pointer-events-none" />
-            <h3 className="text-xl font-bold font-display mb-4 flex items-center gap-2">
-              <Sparkles className="text-primary-500" size={20} /> AI Summary
+          <div className="glass p-8 rounded-3xl relative overflow-hidden border border-surface-200/60 dark:border-surface-800/60 shadow-glass">
+            <h3 className="text-xl font-bold font-display mb-4 flex items-center gap-2 text-surface-900 dark:text-white">
+              <Sparkles className="text-primary-900 dark:text-primary-300" size={20} /> AI Recommendation Summary
             </h3>
-            <p className="text-lg leading-relaxed text-surface-700 dark:text-surface-300 relative z-10">
+            <p className="text-lg leading-relaxed text-surface-850 dark:text-surface-200 relative z-10 italic">
               "{result.aiSummary}"
             </p>
             
