@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
 import {
   ArrowRight,
@@ -35,285 +35,147 @@ function FadeInSection({ children, className = '' }: { children: React.ReactNode
 /* ─────────── Hero Floating Laptop SVG ─────────── */
 /* ─────────── Interactive 3D Canvas Illustration ─────────── */
 function HeroIllustration3D() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+  const springX = useSpring(mouseX, { stiffness: 120, damping: 20 });
+  const springY = useSpring(mouseY, { stiffness: 120, damping: 20 });
 
-    let animationId: number;
-    const width = 600;
-    const height = 450;
-    
-    // Set high DPI canvas resolution
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    ctx.scale(dpr, dpr);
+  const rotateX = useTransform(springY, [-0.5, 0.5], ["12deg", "-12deg"]);
+  const rotateY = useTransform(springX, [-0.5, 0.5], ["-15deg", "15deg"]);
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left - width / 2;
-      const y = e.clientY - rect.top - height / 2;
-      mouseRef.current.targetX = (x / (width / 2)) * 0.45;
-      mouseRef.current.targetY = (y / (height / 2)) * 0.45;
-    };
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const width = rect.width;
+    const height = rect.height;
+    const x = (e.clientX - rect.left) / width - 0.5;
+    const y = (e.clientY - rect.top) / height - 0.5;
+    mouseX.set(x);
+    mouseY.set(y);
+  };
 
-    const handleMouseLeave = () => {
-      mouseRef.current.targetX = 0;
-      mouseRef.current.targetY = 0;
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mouseleave', handleMouseLeave);
-
-    let angleX = 0.2;
-    let angleY = 0.6;
-    let time = 0;
-
-    // 3D Projection Helper
-    const project = (x: number, y: number, z: number) => {
-      const cosY = Math.cos(angleY);
-      const sinY = Math.sin(angleY);
-      const x1 = x * cosY - z * sinY;
-      const z1 = x * sinY + z * cosY;
-
-      const cosX = Math.cos(angleX);
-      const sinX = Math.sin(angleX);
-      const y2 = y * cosX - z1 * sinX;
-      const z2 = y * sinX + z1 * cosX;
-
-      const fov = 500;
-      const scale = fov / (fov + z2);
-      return {
-        x: width / 2 + x1 * scale,
-        y: height / 2 + y2 * scale,
-        z: z2,
-        scale: scale
-      };
-    };
-
-    // Draw Rounded projected Polygon
-    const drawProjectedCard = (
-      cx: number, cy: number, cz: number,
-      w: number, h: number,
-      bgColor: string, borderColor: string,
-      title: string, price: string,
-      barHeights: number[],
-      winner: boolean
-    ) => {
-      const halfW = w / 2;
-      const halfH = h / 2;
-      const corners = [
-        { x: cx - halfW, y: cy - halfH, z: cz },
-        { x: cx + halfW, y: cy - halfH, z: cz },
-        { x: cx + halfW, y: cy + halfH, z: cz },
-        { x: cx - halfW, y: cy + halfH, z: cz }
-      ];
-
-      const projected = corners.map(c => project(c.x, c.y, c.z));
-
-      // Draw shadow
-      ctx.beginPath();
-      projected.forEach((p, i) => {
-        if (i === 0) ctx.moveTo(p.x, p.y + 20);
-        else ctx.lineTo(p.x, p.y + 20);
-      });
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
-      ctx.filter = 'blur(16px)';
-      ctx.fill();
-      ctx.filter = 'none';
-
-      // Draw card body
-      ctx.beginPath();
-      projected.forEach((p, i) => {
-        if (i === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
-      });
-      ctx.closePath();
-      ctx.fillStyle = bgColor;
-      ctx.fill();
-
-      // Card border
-      ctx.strokeStyle = borderColor;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      const scale = projected[0].scale;
-      const origin = projected[0];
-      
-      const dxX = (projected[1].x - projected[0].x) / w;
-      const dxY = (projected[1].y - projected[0].y) / w;
-      const dyX = (projected[3].x - projected[0].x) / h;
-      const dyY = (projected[3].y - projected[0].y) / h;
-
-      const drawText3D = (text: string, localX: number, localY: number, font: string, color: string) => {
-        const px = origin.x + localX * dxX + localY * dyX;
-        const py = origin.y + localX * dxY + localY * dyY;
-        
-        ctx.save();
-        ctx.translate(px, py);
-        
-        const skewAngleX = Math.atan2(dxY, dxX);
-        const skewAngleY = Math.atan2(dyX, dyY);
-        ctx.transform(1, skewAngleX, skewAngleY, 1, 0, 0);
-
-        ctx.fillStyle = color;
-        ctx.font = font;
-        ctx.fillText(text, 0, 0);
-        ctx.restore();
-      };
-
-      drawText3D(title, 20, 30, `bold ${Math.round(14 * scale)}px Inter, sans-serif`, '#0f172a');
-      drawText3D(price, 20, 52, `bold ${Math.round(16 * scale)}px Inter, sans-serif`, winner ? '#10b981' : '#6366f1');
-
-      // Draw stats lines
-      const lineY = [70, 85, 100];
-      lineY.forEach(ly => {
-        ctx.beginPath();
-        const start = { x: origin.x + 20 * dxX + ly * dyX, y: origin.y + 20 * dxY + ly * dyY };
-        const end = { x: origin.x + (w - 20) * dxX + ly * dyX, y: origin.y + (w - 20) * dxY + ly * dyY };
-        ctx.moveTo(start.x, start.y);
-        ctx.lineTo(end.x, end.y);
-        ctx.strokeStyle = 'rgba(15, 23, 42, 0.06)';
-        ctx.lineWidth = 3 * scale;
-        ctx.stroke();
-      });
-
-      // Bar charts
-      barHeights.forEach((bh, idx) => {
-        const bx = 20 + idx * 25;
-        const by = h - 20;
-        const start = { x: origin.x + bx * dxX + by * dyX, y: origin.y + bx * dxY + by * dyY };
-        const end = { x: origin.x + bx * dxX + (by - bh) * dyX, y: origin.y + bx * dxY + (by - bh) * dyY };
-        
-        ctx.beginPath();
-        ctx.moveTo(start.x, start.y);
-        ctx.lineTo(end.x, end.y);
-        ctx.strokeStyle = winner ? 'rgba(16, 185, 129, 0.8)' : 'rgba(99, 102, 241, 0.6)';
-        ctx.lineWidth = 12 * scale;
-        ctx.lineCap = 'round';
-        ctx.stroke();
-      });
-    };
-
-    // Draw central Octahedron Glass Lens
-    const drawGlassLens = (cx: number, cy: number, cz: number, r: number) => {
-      const vertices = [
-        { x: cx, y: cy - r, z: cz },
-        { x: cx - r, y: cy, z: cz - r },
-        { x: cx + r, y: cy, z: cz - r },
-        { x: cx + r, y: cy, z: cz + r },
-        { x: cx - r, y: cy, z: cz + r },
-        { x: cx, y: cy + r, z: cz }
-      ];
-
-      const projected = vertices.map(v => project(v.x, v.y, v.z));
-
-      const faces = [
-        [0, 1, 2], [0, 2, 3], [0, 3, 4], [0, 4, 1],
-        [5, 2, 1], [5, 3, 2], [5, 4, 3], [5, 1, 4]
-      ];
-
-      const sortedFaces = faces.map(f => {
-        const z = (projected[f[0]].z + projected[f[1]].z + projected[f[2]].z) / 3;
-        return { indices: f, z };
-      }).sort((a, b) => b.z - a.z);
-
-      sortedFaces.forEach(face => {
-        const p1 = projected[face.indices[0]];
-        const p2 = projected[face.indices[1]];
-        const p3 = projected[face.indices[2]];
-
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.lineTo(p3.x, p3.y);
-        ctx.closePath();
-
-        const grad = ctx.createLinearGradient(p1.x, p1.y, p3.x, p3.y);
-        grad.addColorStop(0, 'rgba(139, 92, 246, 0.28)');
-        grad.addColorStop(1, 'rgba(6, 182, 212, 0.28)');
-
-        ctx.fillStyle = grad;
-        ctx.fill();
-
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      });
-    };
-
-    const loop = () => {
-      mouseRef.current.x += (mouseRef.current.targetX - mouseRef.current.x) * 0.1;
-      mouseRef.current.y += (mouseRef.current.targetY - mouseRef.current.y) * 0.1;
-
-      angleY = time * 0.3 + mouseRef.current.x;
-      angleX = 0.2 + Math.sin(time * 0.15) * 0.08 + mouseRef.current.y;
-
-      ctx.clearRect(0, 0, width, height);
-
-      // Draw background glow base
-      const glowGrad = ctx.createRadialGradient(width/2, height/2, 20, width/2, height/2, 240);
-      glowGrad.addColorStop(0, 'rgba(139, 92, 246, 0.06)');
-      glowGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      ctx.fillStyle = glowGrad;
-      ctx.fillRect(0, 0, width, height);
-
-      const items = [
-        {
-          type: 'card',
-          z: Math.sin(angleY) * 160,
-          draw: () => drawProjectedCard(
-            -110, Math.sin(time * 1.5) * 10, Math.cos(angleY) * 160,
-            160, 190,
-            'rgba(255, 255, 255, 0.95)', 'rgba(15, 23, 42, 0.08)',
-            'Brand Alpha', '₹64,990',
-            [30, 45, 55],
-            false
-          )
-        },
-        {
-          type: 'card',
-          z: Math.sin(angleY + Math.PI) * 160,
-          draw: () => drawProjectedCard(
-            110, Math.sin(time * 1.5 + Math.PI) * 10, Math.cos(angleY + Math.PI) * 160,
-            160, 190,
-            'rgba(255, 255, 255, 0.98)', 'rgba(16, 185, 129, 0.15)',
-            'Brand Beta', '₹58,990',
-            [50, 65, 80],
-            true
-          )
-        },
-        {
-          type: 'lens',
-          z: 0,
-          draw: () => drawGlassLens(0, Math.cos(time * 1.5) * 6, 0, 60)
-        }
-      ];
-
-      items.sort((a, b) => b.z - a.z);
-      items.forEach(item => item.draw());
-
-      time += 0.02;
-      animationId = requestAnimationFrame(loop);
-    };
-
-    loop();
-
-    return () => {
-      cancelAnimationFrame(animationId);
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, []);
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
 
   return (
-    <div className="relative w-full max-w-[600px] h-[450px] mx-auto filter drop-shadow-[0_20px_40px_rgba(0,0,0,0.06)] rounded-3xl overflow-hidden bg-transparent">
-      <canvas ref={canvasRef} className="w-full h-full block cursor-grab active:cursor-grabbing" />
+    <div 
+      ref={containerRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="relative w-full max-w-[550px] h-[400px] mx-auto flex items-center justify-center cursor-grab active:cursor-grabbing select-none perspective-[1200px]"
+    >
+      <motion.div
+        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+        className="relative w-full h-full flex items-center justify-center transition-all duration-300 ease-out"
+      >
+        {/* Glow backdrop */}
+        <div className="absolute w-80 h-80 rounded-full bg-gradient-to-br from-primary-500/10 via-accent-violet/10 to-transparent blur-3xl pointer-events-none" />
+
+        {/* ── CARD 1: LEFT CARD (Sits further back in 3D space) ── */}
+        <motion.div
+          style={{
+            transform: "translateZ(-40px) translateX(-110px) translateY(-20px) rotateY(12deg)",
+            transformStyle: "preserve-3d"
+          }}
+          className="absolute w-52 bg-white dark:bg-surface-900 border border-surface-200/60 dark:border-surface-800 p-5 rounded-2xl shadow-glass transition-all duration-300 hover:shadow-glass-lg"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+            <span className="text-[11px] font-bold text-surface-400 uppercase tracking-wider">Product Alpha</span>
+          </div>
+          <h4 className="text-base font-bold text-surface-900 dark:text-white truncate">iPhone 15 Pro</h4>
+          <p className="text-sm font-bold text-primary-600 dark:text-primary-400 mt-1">₹1,29,900</p>
+          
+          <div className="space-y-2.5 mt-5">
+            <div>
+              <div className="flex justify-between text-[10px] font-semibold text-surface-500 mb-1">
+                <span>Performance</span>
+                <span>88%</span>
+              </div>
+              <div className="w-full h-1.5 bg-surface-100 dark:bg-surface-800 rounded-full overflow-hidden">
+                <div className="w-[88%] h-full bg-primary-500 rounded-full" />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-[10px] font-semibold text-surface-500 mb-1">
+                <span>Battery</span>
+                <span>72%</span>
+              </div>
+              <div className="w-full h-1.5 bg-surface-100 dark:bg-surface-800 rounded-full overflow-hidden">
+                <div className="w-[72%] h-full bg-primary-500 rounded-full" />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ── CARD 2: RIGHT CARD (Sits intermediate in 3D space) ── */}
+        <motion.div
+          style={{
+            transform: "translateZ(30px) translateX(90px) translateY(30px) rotateY(-8deg)",
+            transformStyle: "preserve-3d"
+          }}
+          className="absolute w-52 bg-white dark:bg-surface-900 border border-emerald-500/20 p-5 rounded-2xl shadow-glass transition-all duration-300 hover:shadow-glass-lg"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+              <span className="text-[11px] font-bold text-surface-400 uppercase tracking-wider">Product Beta</span>
+            </div>
+            <span className="text-[9px] font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded">Winner</span>
+          </div>
+          <h4 className="text-base font-bold text-surface-900 dark:text-white truncate">Galaxy S24 Ultra</h4>
+          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-450 mt-1">₹1,19,900</p>
+          
+          <div className="space-y-2.5 mt-5">
+            <div>
+              <div className="flex justify-between text-[10px] font-semibold text-surface-500 mb-1">
+                <span>Performance</span>
+                <span>94%</span>
+              </div>
+              <div className="w-full h-1.5 bg-surface-100 dark:bg-surface-800 rounded-full overflow-hidden">
+                <div className="w-[94%] h-full bg-emerald-500 rounded-full" />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-[10px] font-semibold text-surface-500 mb-1">
+                <span>Battery</span>
+                <span>86%</span>
+              </div>
+              <div className="w-full h-1.5 bg-surface-100 dark:bg-surface-800 rounded-full overflow-hidden">
+                <div className="w-[86%] h-full bg-emerald-500 rounded-full" />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ── THE LENS: CENTRAL CENTRAL LENS (Floats in front of everything) ── */}
+        <motion.div
+          style={{
+            transform: "translateZ(80px) translateY(-10px)",
+            transformStyle: "preserve-3d"
+          }}
+          className="absolute w-44 h-44 rounded-full border border-white/40 bg-gradient-to-br from-white/30 to-white/10 backdrop-blur-md shadow-glass-lg flex items-center justify-center"
+        >
+          <div className="absolute inset-2.5 rounded-full border border-white/20 bg-gradient-to-tr from-primary-500/10 via-accent-violet/5 to-transparent" />
+          
+          <div className="relative flex flex-col items-center justify-center text-center p-4">
+            <Sparkles className="w-8 h-8 text-primary-900 dark:text-primary-300 animate-pulse mb-1.5" />
+            <span className="text-[10px] font-bold text-surface-900 uppercase tracking-widest leading-none">Product</span>
+            <span className="text-[12px] font-extrabold text-primary-950 uppercase tracking-widest leading-none">Lens</span>
+          </div>
+
+          {/* Handle of the lens */}
+          <div 
+            style={{ transform: "rotate(45deg) translateY(80px)" }}
+            className="absolute bottom-0 w-4 h-16 bg-gradient-to-b from-white/30 to-white/10 border border-white/20 rounded-b-xl shadow-sm"
+          />
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
