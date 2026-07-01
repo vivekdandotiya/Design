@@ -123,52 +123,50 @@ export default function HomePage() {
           <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-accent-violet/5 rounded-full blur-[90px]" />
         </div>
 
-        <div className="container-wide relative">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            {/* Left content */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7 }}
-              className="space-y-8"
-            >
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-surface-900 border border-surface-200/80 dark:border-surface-800 shadow-sm">
-                <Sparkles className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
-                <span className="text-xs font-semibold text-surface-700 dark:text-surface-300">
-                  AI-Powered Grounding Comparison
-                </span>
-              </div>
+        <div className="container-wide relative flex flex-col items-center">
+          {/* Centered content */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            className="space-y-8 max-w-3xl mx-auto flex flex-col items-center text-center"
+          >
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-surface-900 border border-surface-200/80 dark:border-surface-800 shadow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
+              <span className="text-xs font-semibold text-surface-700 dark:text-surface-300">
+                AI-Powered Grounding Comparison
+              </span>
+            </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-medium font-display leading-[1.15] tracking-tight text-surface-900 dark:text-white text-balance">
-                Stop guessing.<br />
-                Start choosing <span className="italic text-primary-600 dark:text-primary-400">smarter.</span>
-              </h1>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-medium font-display leading-[1.15] tracking-tight text-surface-900 dark:text-white text-balance text-center">
+              Stop guessing.<br />
+              Start choosing <span className="italic text-primary-600 dark:text-primary-400">smarter.</span>
+            </h1>
 
-              <p className="text-lg text-surface-500 dark:text-surface-400 max-w-lg leading-relaxed">
-                Compare products side-by-side with live web-grounded specs and real-time e-commerce store prices.
-              </p>
+            <p className="text-lg text-surface-500 dark:text-surface-400 max-w-xl leading-relaxed text-center">
+              Compare products side-by-side with live web-grounded specs and real-time e-commerce store prices.
+            </p>
 
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/compare" className="btn-primary text-base !px-8 !py-3.5 shadow-glass">
-                  Start Comparing
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
-                <Link to="/recommend" className="btn-secondary text-base !px-8 !py-3.5 shadow-glass">
-                  Get AI Advice
-                </Link>
-              </div>
-            </motion.div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/compare" className="btn-primary text-base !px-8 !py-3.5 shadow-glass">
+                Start Comparing
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link to="/recommend" className="btn-secondary text-base !px-8 !py-3.5 shadow-glass">
+                Get AI Advice
+              </Link>
+            </div>
+          </motion.div>
 
-            {/* Right illustration */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="flex justify-center lg:justify-end"
-            >
-              <FloatingLaptop />
-            </motion.div>
-          </div>
+          {/* Centered illustration below */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="w-full flex justify-center mt-12 max-w-2xl"
+          >
+            <FloatingLaptop />
+          </motion.div>
         </div>
       </section>
 
