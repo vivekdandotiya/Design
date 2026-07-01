@@ -69,7 +69,7 @@
 
   /* Gradient text */
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-950 via-accent-violet to-primary-750;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-950 via-accent-violet to-primary-800;
   }
 
   /* Shimmer loading effect */
