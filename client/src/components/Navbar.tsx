@@ -44,16 +44,16 @@ export default function Navbar() {
   return (
     <div className={cn(
       "fixed left-0 w-full z-50 flex justify-center pointer-events-none transition-all duration-300",
-      isScrolled ? "top-0 py-0" : "top-4 py-0"
+      isScrolled ? "top-0" : "top-6"
     )}>
       <motion.nav
         layout
         transition={{ type: 'spring', stiffness: 220, damping: 26 }}
         className={cn(
-          "pointer-events-auto flex items-center justify-between transition-colors duration-300",
+          "pointer-events-auto flex items-center justify-between transition-all duration-300",
           isScrolled
-            ? "w-full h-16 px-6 border-b border-surface-200/30 dark:border-surface-800/30 bg-white/90 dark:bg-surface-950/80 backdrop-blur-3xl shadow-glass-lg rounded-none"
-            : "w-[90%] max-w-5xl h-12 px-6 border border-surface-200/20 dark:border-surface-800/20 bg-white/80 dark:bg-surface-900/50 backdrop-blur-3xl shadow-glass rounded-full"
+            ? "w-full h-16 px-8 border-b border-surface-200/50 dark:border-surface-800/40 bg-white/95 dark:bg-surface-950/90 backdrop-blur-3xl shadow-glass-lg rounded-none"
+            : "w-[90%] max-w-5xl h-14 px-8 border border-surface-200/40 dark:border-surface-800/30 bg-white dark:bg-surface-900/80 backdrop-blur-3xl shadow-glass rounded-full"
         )}
       >
           {/* Logo */}
