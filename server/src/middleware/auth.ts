@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User, { IUser } from '../models/User';
+import { isDbOffline, mockUsers } from '../config/mockDb';
 
 // Extend Express Request
 export interface AuthRequest extends Request {
@@ -42,7 +43,12 @@ export const auth = async (
     const secret = process.env.JWT_SECRET || 'fallback-secret';
     const decoded = jwt.verify(token, secret) as JwtPayload;
 
-    const user = await User.findById(decoded.id);
+    let user;
+    if (isDbOffline()) {
+      user = mockUsers.find(u => u._id === decoded.id);
+    } else {
+      user = await User.findById(decoded.id);
+    }
 
     if (!user) {
       res.status(401).json({
@@ -52,7 +58,7 @@ export const auth = async (
       return;
     }
 
-    req.user = user;
+    req.user = user as any;
     next();
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
