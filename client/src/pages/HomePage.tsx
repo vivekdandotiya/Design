@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { motion, useInView, useMotionValue, useTransform, useSpring } from 'framer-motion';
+import { motion, useInView, useMotionValue, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
 import {
   ArrowRight,
@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import api from '../lib/api';
 import type { Product } from '../types';
-import { formatPrice } from '../lib/utils';
+import { formatPrice, cn } from '../lib/utils';
 
 /* ─────────── Animated Section Wrapper ─────────── */
 function FadeInSection({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -183,6 +183,7 @@ function HeroIllustration3D() {
 /* ─────────── Home Page ─────────── */
 export default function HomePage() {
   const [featured, setFeatured] = useState<Product[]>([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
     api
@@ -316,14 +317,226 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Illustrative mock of how it works */}
-          <FadeInSection className="mt-16 text-center">
-            <div className="glass rounded-3xl p-4 max-w-4xl mx-auto shadow-glass overflow-hidden border border-surface-200/20 dark:border-surface-800/20 hover:shadow-glass-lg transition-all duration-300">
-              <img 
-                src="/src/assets/how_it_works.png" 
-                alt="How ProductLens works illustration" 
-                className="w-full h-auto rounded-2xl object-cover hover:scale-[1.01] transition-transform duration-500"
-              />
+          {/* Interactive Sliding comparison Mock */}
+          <FadeInSection className="mt-16">
+            <div className="glass rounded-3xl p-8 max-w-4xl mx-auto shadow-glass-lg border border-surface-200/60 dark:border-surface-800/50 bg-white dark:bg-surface-900 relative">
+              
+              {/* Slider Header */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-surface-200/60 dark:border-surface-800/50 pb-6 mb-8">
+                <div className="text-left">
+                  <h3 className="text-xl font-bold font-display text-surface-900 dark:text-white">
+                    Live Comparison Demos
+                  </h3>
+                  <p className="text-xs text-surface-500 mt-1">
+                    See how ProductLens structures specs and gathers prices across categories.
+                  </p>
+                </div>
+                
+                {/* Navigation Dots/Tabs */}
+                <div className="flex gap-2">
+                  {[
+                    { label: 'Electronics', id: 0 },
+                    { label: 'Household', id: 1 },
+                    { label: 'Fashion', id: 2 }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setCurrentSlide(tab.id)}
+                      className={cn(
+                        "px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-300",
+                        currentSlide === tab.id
+                          ? "bg-primary-900 text-white dark:bg-primary-100 dark:text-surface-950 shadow-sm"
+                          : "bg-surface-100/60 hover:bg-surface-150 dark:bg-surface-800/50 text-surface-600 dark:text-surface-400"
+                      )}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Slider Content Wrapper */}
+              <div className="relative min-h-[300px]">
+                <AnimatePresence mode="wait">
+                  {currentSlide === 0 && (
+                    <motion.div
+                      key="slide-electronics"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3 }}
+                      className="grid md:grid-cols-2 gap-8 items-center"
+                    >
+                      {/* Left Product */}
+                      <div className="border border-surface-200/60 dark:border-surface-800/60 p-6 rounded-2xl bg-surface-50/30 dark:bg-surface-950/20 text-left shadow-sm">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-[11px] font-bold text-primary-600 uppercase">Product Alpha</span>
+                          <span className="text-xs font-bold text-surface-500">₹79,900</span>
+                        </div>
+                        <h4 className="text-lg font-bold text-surface-900 dark:text-white">iPhone 15</h4>
+                        
+                        <div className="space-y-3.5 mt-5">
+                          <div className="flex justify-between text-xs border-b border-surface-200/20 pb-2">
+                            <span className="text-surface-500">Camera</span>
+                            <span className="font-semibold text-surface-800 dark:text-surface-200">48 MP Dual</span>
+                          </div>
+                          <div className="flex justify-between text-xs border-b border-surface-200/20 pb-2">
+                            <span className="text-surface-500">Display</span>
+                            <span className="font-semibold text-surface-800 dark:text-surface-200">6.1" Super Retina</span>
+                          </div>
+                          <div className="flex justify-between text-xs pb-1">
+                            <span className="text-surface-500">Store Rates</span>
+                            <span className="text-[11px] font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded">₹75,490 on Amazon</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Product */}
+                      <div className="border border-emerald-500/20 p-6 rounded-2xl bg-surface-50/30 dark:bg-surface-950/20 text-left shadow-sm">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-[11px] font-bold text-emerald-600 uppercase">Product Beta</span>
+                          <span className="text-xs font-bold text-surface-500">₹74,900</span>
+                        </div>
+                        <h4 className="text-lg font-bold text-surface-900 dark:text-white">Galaxy S24</h4>
+                        
+                        <div className="space-y-3.5 mt-5">
+                          <div className="flex justify-between text-xs border-b border-surface-200/20 pb-2">
+                            <span className="text-surface-500">Camera</span>
+                            <span className="font-semibold text-surface-800 dark:text-surface-200">50 MP Triple</span>
+                          </div>
+                          <div className="flex justify-between text-xs border-b border-surface-200/20 pb-2">
+                            <span className="text-surface-500">Display</span>
+                            <span className="font-semibold text-surface-800 dark:text-surface-200">6.2" Dynamic AMOLED</span>
+                          </div>
+                          <div className="flex justify-between text-xs pb-1">
+                            <span className="text-surface-500">Store Rates</span>
+                            <span className="text-[11px] font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded">₹71,999 on Flipkart</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {currentSlide === 1 && (
+                    <motion.div
+                      key="slide-household"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3 }}
+                      className="grid md:grid-cols-2 gap-8 items-center"
+                    >
+                      {/* Left Product */}
+                      <div className="border border-surface-200/60 dark:border-surface-800/60 p-6 rounded-2xl bg-surface-50/30 dark:bg-surface-950/20 text-left shadow-sm">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-[11px] font-bold text-primary-600 uppercase">Product Alpha</span>
+                          <span className="text-xs font-bold text-surface-500">₹18,990</span>
+                        </div>
+                        <h4 className="text-lg font-bold text-surface-900 dark:text-white">Espresso Machine</h4>
+                        
+                        <div className="space-y-3.5 mt-5">
+                          <div className="flex justify-between text-xs border-b border-surface-200/20 pb-2">
+                            <span className="text-surface-500">Pressure</span>
+                            <span className="font-semibold text-surface-800 dark:text-surface-200">15 Bar Italian</span>
+                          </div>
+                          <div className="flex justify-between text-xs border-b border-surface-200/20 pb-2">
+                            <span className="text-surface-500">Water Tank</span>
+                            <span className="font-semibold text-surface-800 dark:text-surface-200">1.8 L Removable</span>
+                          </div>
+                          <div className="flex justify-between text-xs pb-1">
+                            <span className="text-surface-500">Store Rates</span>
+                            <span className="text-[11px] font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded">₹17,490 on Croma</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Product */}
+                      <div className="border border-emerald-500/20 p-6 rounded-2xl bg-surface-50/30 dark:bg-surface-950/20 text-left shadow-sm">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-[11px] font-bold text-emerald-600 uppercase">Product Beta</span>
+                          <span className="text-xs font-bold text-surface-500">₹6,499</span>
+                        </div>
+                        <h4 className="text-lg font-bold text-surface-900 dark:text-white">Drip Coffee Maker</h4>
+                        
+                        <div className="space-y-3.5 mt-5">
+                          <div className="flex justify-between text-xs border-b border-surface-200/20 pb-2">
+                            <span className="text-surface-500">Pressure</span>
+                            <span className="font-semibold text-surface-800 dark:text-surface-200">Drip Brew (None)</span>
+                          </div>
+                          <div className="flex justify-between text-xs border-b border-surface-200/20 pb-2">
+                            <span className="text-surface-500">Capacity</span>
+                            <span className="font-semibold text-surface-800 dark:text-surface-200">1.2 L Glass Carafe</span>
+                          </div>
+                          <div className="flex justify-between text-xs pb-1">
+                            <span className="text-surface-500">Store Rates</span>
+                            <span className="text-[11px] font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded">₹5,999 on Flipkart</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {currentSlide === 2 && (
+                    <motion.div
+                      key="slide-fashion"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3 }}
+                      className="grid md:grid-cols-2 gap-8 items-center"
+                    >
+                      {/* Left Product */}
+                      <div className="border border-surface-200/60 dark:border-surface-800/60 p-6 rounded-2xl bg-surface-50/30 dark:bg-surface-950/20 text-left shadow-sm">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-[11px] font-bold text-primary-600 uppercase">Product Alpha</span>
+                          <span className="text-xs font-bold text-surface-500">₹8,999</span>
+                        </div>
+                        <h4 className="text-lg font-bold text-surface-900 dark:text-white">Leather Biker Jacket</h4>
+                        
+                        <div className="space-y-3.5 mt-5">
+                          <div className="flex justify-between text-xs border-b border-surface-200/20 pb-2">
+                            <span className="text-surface-500">Material</span>
+                            <span className="font-semibold text-surface-800 dark:text-surface-200">100% Genuine Leather</span>
+                          </div>
+                          <div className="flex justify-between text-xs border-b border-surface-200/20 pb-2">
+                            <span className="text-surface-500">Sizes</span>
+                            <span className="font-semibold text-surface-800 dark:text-surface-200">S, M, L, XL, XXL</span>
+                          </div>
+                          <div className="flex justify-between text-xs pb-1">
+                            <span className="text-surface-500">Store Rates</span>
+                            <span className="text-[11px] font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded">₹7,999 on Myntra</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Product */}
+                      <div className="border border-emerald-500/20 p-6 rounded-2xl bg-surface-50/30 dark:bg-surface-950/20 text-left shadow-sm">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-[11px] font-bold text-emerald-600 uppercase">Product Beta</span>
+                          <span className="text-xs font-bold text-surface-500">₹3,499</span>
+                        </div>
+                        <h4 className="text-lg font-bold text-surface-900 dark:text-white">Denim Trucker Jacket</h4>
+                        
+                        <div className="space-y-3.5 mt-5">
+                          <div className="flex justify-between text-xs border-b border-surface-200/20 pb-2">
+                            <span className="text-surface-500">Material</span>
+                            <span className="font-semibold text-surface-800 dark:text-surface-200">100% Cotton Denim</span>
+                          </div>
+                          <div className="flex justify-between text-xs border-b border-surface-200/20 pb-2">
+                            <span className="text-surface-500">Sizes</span>
+                            <span className="font-semibold text-surface-800 dark:text-surface-200">S, M, L, XL</span>
+                          </div>
+                          <div className="flex justify-between text-xs pb-1">
+                            <span className="text-surface-500">Store Rates</span>
+                            <span className="text-[11px] font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded">₹2,999 on Ajio</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
             </div>
           </FadeInSection>
         </div>
