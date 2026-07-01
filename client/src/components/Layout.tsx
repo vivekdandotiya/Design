@@ -5,7 +5,7 @@ import CompareBar from './CompareBar';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-surface-950 transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-transparent dark:bg-surface-950 transition-colors duration-300">
       <Navbar />
       <main className="flex-1">
         {children}

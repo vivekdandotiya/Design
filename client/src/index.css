@@ -20,8 +20,8 @@
   body {
     @apply bg-[#ffffff] dark:bg-surface-950 text-surface-900 dark:text-surface-100 font-sans transition-colors duration-300;
     background-image: 
-      radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 0),
-      radial-gradient(circle at 50% 30%, rgba(99, 102, 241, 0.02) 0%, transparent 65%);
+      radial-gradient(rgba(15, 23, 42, 0.08) 1.2px, transparent 0),
+      radial-gradient(circle at 50% 30%, rgba(99, 102, 241, 0.03) 0%, transparent 65%);
     background-size: 24px 24px, 100% 100%;
     background-attachment: fixed;
   }
