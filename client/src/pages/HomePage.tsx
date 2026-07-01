@@ -133,33 +133,29 @@ export default function HomePage() {
               transition={{ duration: 0.7 }}
               className="space-y-8"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-50 dark:bg-primary-950/40 border border-primary-200 dark:border-primary-800">
-                <Sparkles className="w-4 h-4 text-primary-500" />
-                <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
-                  AI-Powered Comparison Engine
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-surface-900 border border-surface-200/80 dark:border-surface-800 shadow-sm">
+                <Sparkles className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
+                <span className="text-xs font-semibold text-surface-700 dark:text-surface-300">
+                  AI-Powered Grounding Comparison
                 </span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold font-display leading-[1.1] tracking-tight text-surface-900 dark:text-white">
-                Stop Guessing.<br />
-                <span className="text-surface-900 dark:text-white relative">
-                  Start Choosing
-                  <span className="absolute bottom-1 left-0 right-0 h-4 bg-primary-500/10 dark:bg-primary-500/20 -z-10 -rotate-1 rounded-sm"></span>
-                </span><br />
-                Smarter.
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-medium font-display leading-[1.15] tracking-tight text-surface-900 dark:text-white text-balance">
+                Stop guessing.<br />
+                Start choosing <span className="italic text-primary-600 dark:text-primary-400">smarter.</span>
               </h1>
 
               <p className="text-lg text-surface-500 dark:text-surface-400 max-w-lg leading-relaxed">
-                Compare products side-by-side with AI-driven insights. Get personalized recommendations based on your needs, budget, and priorities.
+                Compare products side-by-side with live web-grounded specs and real-time e-commerce store prices.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/compare" className="btn-primary text-base !px-8 !py-4">
+                <Link to="/compare" className="btn-primary text-base !px-8 !py-3.5 shadow-glass">
                   Start Comparing
                   <ArrowRight className="w-5 h-5" />
                 </Link>
-                <Link to="/recommend" className="btn-ghost text-base !px-8 !py-4">
-                  AI Recommendation
+                <Link to="/recommend" className="btn-secondary text-base !px-8 !py-3.5 shadow-glass">
+                  Get AI Advice
                 </Link>
               </div>
             </motion.div>
