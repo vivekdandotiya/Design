@@ -11,7 +11,6 @@ import {
   Quote,
   Monitor,
 } from 'lucide-react';
-import AnimatedCounter from '../components/AnimatedCounter';
 import api from '../lib/api';
 import type { Product } from '../types';
 import { formatPrice } from '../lib/utils';
@@ -173,28 +172,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── STATS ── */}
-      <section className="py-16 border-y border-surface-200 dark:border-surface-800 bg-surface-50/50 dark:bg-surface-900/50">
-        <div className="container-wide">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              { value: 500, suffix: '+', label: 'Products Cataloged' },
-              { value: 10000, suffix: '+', label: 'Comparisons Made' },
-              { value: 98, suffix: '%', label: 'Accuracy Rate' },
-              { value: 5000, suffix: '+', label: 'Happy Users' },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center space-y-2">
-                <AnimatedCounter
-                  target={stat.value}
-                  suffix={stat.suffix}
-                  className="text-3xl md:text-4xl font-bold font-display text-gradient"
-                />
-                <p className="text-sm text-surface-500 dark:text-surface-400">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       {/* ── HOW IT WORKS ── */}
       <section className="section">
