@@ -105,6 +105,7 @@ export interface RecommendationRequest {
   gaming: number;
   batteryImportance: number;
   portability: number;
+  category?: string;
 }
 
 export interface RecommendationResult {

@@ -21,6 +21,7 @@ interface UserPreferences {
   budget?: number;
   purpose?: string;
   priorities?: string[];
+  category?: string;
 }
 
 export interface AIRecommendation {
@@ -582,12 +583,15 @@ export const generateDynamicRecommendation = async (
 ): Promise<DynamicRecommendationResult> => {
   try {
 
-    const prompt = `You are an AI tech advisor. Search the web and find the top 3 best laptops that fit the following user preferences:
+    const categorySingular = userPreferences.category === 'phone' ? 'phone' : 'laptop';
+    const categoryPlural = userPreferences.category === 'phone' ? 'phones' : 'laptops';
+
+    const prompt = `You are an AI tech advisor. Search the web and find the top 3 best ${categoryPlural} that fit the following user preferences:
 - Budget: ${userPreferences.budget ? `₹${userPreferences.budget.toLocaleString('en-IN')}` : 'Not specified'}
 - Purpose: ${userPreferences.purpose || 'General use'}
 - Priorities: ${userPreferences.priorities?.join(', ') || 'Not specified'}
 
-Identify the single best laptop as the winner, and return 2 other laptops as alternatives.
+Identify the single best ${categorySingular} as the winner, and return 2 other ${categoryPlural} as alternatives.
 
 Provide your response in the following JSON format. Return ONLY the JSON object. Do not include markdown code blocks or extra text.
 
