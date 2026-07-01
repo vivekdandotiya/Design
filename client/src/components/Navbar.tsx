@@ -10,7 +10,6 @@ import {
   LogOut,
   Zap,
 } from 'lucide-react';
-import ThemeToggle from './ThemeToggle';
 import { useAuthStore } from '../store/authStore';
 import { cn } from '../lib/utils';
 
@@ -86,7 +85,6 @@ export default function Navbar() {
 
           {/* Right Side */}
           <div className="flex items-center gap-2">
-            <ThemeToggle />
 
             {isAuthenticated && user ? (
               <div className="relative hidden md:block">
