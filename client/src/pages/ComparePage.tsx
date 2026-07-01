@@ -230,16 +230,16 @@ export const ComparePage: React.FC = () => {
                       </th>
                       {result.products.map((p) => (
                         <th key={p._id} className="p-5 align-top w-64 min-w-[220px]">
-                          <div className="glass hover:shadow-glow hover:-translate-y-0.5 transition-all duration-300 rounded-2xl p-4 text-center border border-surface-200/20 dark:border-surface-800/20 bg-surface-50/40 dark:bg-surface-950/20 flex flex-col justify-between min-h-[140px]">
+                          <div className="glass hover:shadow-glass-lg hover:-translate-y-1 transition-all duration-300 rounded-2xl p-5 text-center border border-surface-200/60 dark:border-surface-800/50 flex flex-col justify-between min-h-[150px] shadow-glass bg-white dark:bg-surface-900">
                             <div>
                               <h3 className="font-bold font-display text-base text-surface-900 dark:text-white line-clamp-2">
                                 {p.name}
                               </h3>
                               <p className={cn(
-                                "font-bold mt-2 text-lg transition-colors",
+                                "font-bold mt-2.5 text-lg transition-colors",
                                 result.highlights.bestValue === p._id 
                                   ? "text-emerald-600 dark:text-emerald-400" 
-                                  : "text-primary-600 dark:text-primary-400"
+                                  : "text-primary-900 dark:text-primary-100"
                               )}>
                                 {p.price > 0 ? formatPrice(p.price) : 'N/A'}
                               </p>
@@ -247,7 +247,7 @@ export const ComparePage: React.FC = () => {
                             
                             {/* Lowest rate badge */}
                             {p.lowestPriceStore && (
-                              <div className="mt-3.5 inline-flex items-center justify-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                              <div className="mt-4 inline-flex items-center justify-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/[0.05] dark:bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20 shadow-sm">
                                 Lowest: {formatPrice(p.lowestPrice || 0)} on {p.lowestPriceStore}
                               </div>
                             )}
@@ -304,10 +304,10 @@ export const ComparePage: React.FC = () => {
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className={cn(
-                                        "flex items-center justify-between px-2.5 py-1.5 rounded-lg border text-xs font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all",
+                                        "flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-semibold shadow-sm hover:shadow transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]",
                                         isLowest
-                                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400 shadow-sm"
-                                          : "bg-surface-50/50 dark:bg-surface-900/40 border-surface-200/50 dark:border-surface-800/40 text-surface-700 dark:text-surface-300"
+                                          ? "bg-emerald-500/[0.04] dark:bg-emerald-500/[0.02] border-emerald-500/35 text-emerald-600 dark:text-emerald-400"
+                                          : "bg-white dark:bg-surface-900/50 border-surface-200/60 dark:border-surface-800/60 text-surface-700 dark:text-surface-300"
                                       )}
                                     >
                                       <span>{storePrice.store}</span>
