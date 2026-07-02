@@ -50,7 +50,8 @@ const callGeminiAPI = async (prompt: string, modelName: string = 'gemini-1.5-fla
     throw new Error('GEMINI_API_KEY environment variable is not set');
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+  const apiVersion = modelName.includes('2.5') ? 'v1beta' : 'v1';
+  const url = `https://generativelanguage.googleapis.com/${apiVersion}/models/${modelName}:generateContent?key=${apiKey}`;
   const payload = {
     contents: [{ parts: [{ text: prompt }] }],
     tools: [{ google_search: {} }]
@@ -522,9 +523,32 @@ IMPORTANT: Search the web to find accurate, real details and store listings for 
     console.error('AI Web Comparison Service Error:', err.message);
 
     // Fallback comparison with ObjectIds
+    const isPhone = productQueries.some(q => {
+      const lower = q.toLowerCase();
+      return lower.includes('phone') || lower.includes('iphone') || lower.includes('galaxy') || lower.includes('pixel') || lower.includes('oneplus') || lower.includes('samsung') || lower.includes('ultra') || lower.includes('s2') || lower.includes('note');
+    });
+
     const productsWithIds = productQueries.map((q) => {
       const id = new mongoose.Types.ObjectId().toString();
-      return {
+      return isPhone ? {
+        _id: id,
+        name: q,
+        brand: q.split(' ')[0] || 'Generic',
+        processor: q.toLowerCase().includes('iphone') ? 'Apple A17 Pro' : 'Snapdragon 8 Gen 3',
+        gpu: q.toLowerCase().includes('iphone') ? 'Apple GPU (6-core)' : 'Adreno 750',
+        ram: '8GB / 12GB LPDDR5X',
+        storage: '256GB UFS 4.0',
+        displaySize: '6.7" Dynamic AMOLED 2X',
+        battery: '5000 mAh',
+        weight: '220g',
+        price: 85000,
+        os: q.toLowerCase().includes('iphone') ? 'iOS 17' : 'Android 14',
+        benchmarkScore: 9000,
+        rating: 4.6,
+        reviewCount: 154,
+        images: ['https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800'],
+        specs: {}
+      } : {
         _id: id,
         name: q,
         brand: q.split(' ')[0] || 'Generic',
