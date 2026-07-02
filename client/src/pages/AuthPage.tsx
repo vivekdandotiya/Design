@@ -10,8 +10,14 @@ export const AuthPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
-  const { login, signup, isLoading, error, clearError } = useAuthStore();
+  const { login, signup, isLoading, error, clearError, user } = useAuthStore();
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

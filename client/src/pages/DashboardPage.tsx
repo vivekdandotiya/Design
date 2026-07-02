@@ -9,7 +9,7 @@ import api from '../lib/api';
 import type { DashboardStats } from '../types';
 
 export const DashboardPage: React.FC = () => {
-  const { user, logout } = useAuthStore();
+  const { user, logout, isLoading: isAuthLoading } = useAuthStore();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,6 +43,8 @@ export const DashboardPage: React.FC = () => {
   };
 
   useEffect(() => {
+    if (isAuthLoading) return;
+
     if (!user) {
       navigate('/auth');
       return;
@@ -59,12 +61,22 @@ export const DashboardPage: React.FC = () => {
       }
     };
     fetchStats();
-  }, [user, navigate]);
+  }, [user, isAuthLoading, navigate]);
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
+
+  const token = localStorage.getItem('cw-token');
+
+  if (isAuthLoading || (token && !user)) {
+    return (
+      <div className="section container-wide py-20 text-center mt-16 text-surface-550 font-bold">
+        Verifying session...
+      </div>
+    );
+  }
 
   if (!user) return null;
   if (loading || !stats) return <div className="section container-wide py-20 text-center mt-16">Loading dashboard...</div>;
