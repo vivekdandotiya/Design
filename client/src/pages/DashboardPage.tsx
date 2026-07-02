@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Heart, History, Settings, LogOut } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { cn } from '../lib/utils';
 import { useAuthStore } from '../store/authStore';
 import ProductCard from '../components/ProductCard';
 import api from '../lib/api';
@@ -12,6 +14,33 @@ export const DashboardPage: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+
+  const [name, setName] = useState(user?.name || '');
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name);
+    }
+  }, [user]);
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setSaveMessage('');
+    try {
+      const res = await api.put('/users/profile', { name });
+      if (res.data.success) {
+        useAuthStore.setState({ user: res.data.user });
+        setSaveMessage('Profile updated successfully!');
+      }
+    } catch (err: any) {
+      setSaveMessage(err.response?.data?.message || 'Failed to update profile.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -77,7 +106,8 @@ export const DashboardPage: React.FC = () => {
                 <History size={18} /> Compare History
               </button>
               <button 
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-surface-600 hover:bg-surface-100 transition-colors"
+                onClick={() => setActiveTab('settings')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'settings' ? 'bg-primary-50 text-primary-600 font-medium' : 'text-surface-600 hover:bg-surface-100'}`}
               >
                 <Settings size={18} /> Settings
               </button>
@@ -161,6 +191,61 @@ export const DashboardPage: React.FC = () => {
                 Comparison history is currently empty.
               </div>
             </>
+          )}
+
+          {activeTab === 'settings' && (
+            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
+              <h1 className="text-3xl font-display font-bold mb-8">Account Settings</h1>
+              
+              <div className="glass p-8 rounded-3xl max-w-xl border border-surface-200/60 dark:border-surface-800/60 bg-white dark:bg-surface-900 shadow-glass">
+                <form onSubmit={handleUpdateProfile} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-surface-600 dark:text-surface-300 mb-2">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="input-field w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-950 focus:ring-2 focus:ring-primary-500/20 text-surface-900 dark:text-white"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-surface-600 dark:text-surface-300 mb-2">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={user.email}
+                      className="input-field w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-900/60 text-surface-400 cursor-not-allowed"
+                      disabled
+                    />
+                    <p className="text-[11px] text-surface-500 mt-2">
+                      Email address cannot be changed. Contact support if you need to update it.
+                    </p>
+                  </div>
+
+                  {saveMessage && (
+                    <p className={cn(
+                      "text-sm font-semibold",
+                      saveMessage.includes('successfully') ? 'text-emerald-600 dark:text-emerald-450' : 'text-rose-500'
+                    )}>
+                      {saveMessage}
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="btn-primary w-full py-3.5 rounded-xl shadow-sm hover:shadow font-bold transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    {saving ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </form>
+              </div>
+            </motion.div>
           )}
         </div>
       </div>
