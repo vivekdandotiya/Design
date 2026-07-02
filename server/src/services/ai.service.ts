@@ -54,7 +54,7 @@ const callGeminiAPI = async (prompt: string, modelName: string = 'gemini-1.5-fla
   const url = `https://generativelanguage.googleapis.com/${apiVersion}/models/${modelName}:generateContent?key=${apiKey}`;
   const payload = {
     contents: [{ parts: [{ text: prompt }] }],
-    tools: [{ google_search: {} }]
+    tools: [{ googleSearch: {} }]
   };
 
   const res = await fetch(url, {
