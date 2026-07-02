@@ -115,3 +115,47 @@ export const adminOnly = async (
     });
   }
 };
+
+export const optionalAuth = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      next();
+      return;
+    }
+
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      next();
+      return;
+    }
+
+    const secret = process.env.JWT_SECRET || 'fallback-secret';
+    let decoded: JwtPayload;
+    try {
+      decoded = jwt.verify(token, secret) as JwtPayload;
+    } catch (e) {
+      next();
+      return;
+    }
+
+    let user;
+    if (isDbOffline()) {
+      user = mockUsers.find(u => u._id === decoded.id);
+    } else {
+      user = await User.findById(decoded.id);
+    }
+
+    if (user) {
+      req.user = user as any;
+    }
+    next();
+  } catch (error) {
+    next();
+  }
+};

@@ -4,6 +4,7 @@ import Product from '../models/Product';
 import Comparison from '../models/Comparison';
 import Review from '../models/Review';
 import { AuthRequest } from '../middleware/auth';
+import { isDbOffline } from '../config/mockDb';
 
 // PUT /api/users/profile
 export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -63,6 +64,27 @@ export const saveProduct = async (req: AuthRequest, res: Response): Promise<void
 
     const { productId } = req.params;
 
+    if (isDbOffline()) {
+      const mockUser = req.user as any;
+      mockUser.savedProducts = mockUser.savedProducts || [];
+      const alreadySaved = mockUser.savedProducts.some(
+        (id: any) => id.toString() === productId
+      );
+
+      if (alreadySaved) {
+        res.status(409).json({ success: false, message: 'Product already saved.' });
+        return;
+      }
+
+      mockUser.savedProducts.push(productId);
+      res.status(200).json({
+        success: true,
+        message: 'Product saved successfully.',
+        savedProducts: mockUser.savedProducts,
+      });
+      return;
+    }
+
     const product = await Product.findById(productId);
     if (!product) {
       res.status(404).json({ success: false, message: 'Product not found.' });
@@ -109,6 +131,26 @@ export const unsaveProduct = async (req: AuthRequest, res: Response): Promise<vo
 
     const { productId } = req.params;
 
+    if (isDbOffline()) {
+      req.user.savedProducts = req.user.savedProducts || [];
+      const index = req.user.savedProducts.findIndex(
+        (id) => id.toString() === productId
+      );
+
+      if (index === -1) {
+        res.status(404).json({ success: false, message: 'Product not in saved list.' });
+        return;
+      }
+
+      req.user.savedProducts.splice(index, 1);
+      res.status(200).json({
+        success: true,
+        message: 'Product removed from saved list.',
+        savedProducts: req.user.savedProducts,
+      });
+      return;
+    }
+
     const user = await User.findById(req.user._id);
     if (!user) {
       res.status(404).json({ success: false, message: 'User not found.' });
@@ -143,6 +185,14 @@ export const getSavedProducts = async (req: AuthRequest, res: Response): Promise
   try {
     if (!req.user) {
       res.status(401).json({ success: false, message: 'Not authenticated.' });
+      return;
+    }
+
+    if (isDbOffline()) {
+      res.status(200).json({
+        success: true,
+        data: [],
+      });
       return;
     }
 
@@ -197,6 +247,23 @@ export const getDashboardStats = async (req: AuthRequest, res: Response): Promis
     }
 
     const userId = req.user._id;
+
+    if (isDbOffline()) {
+      const savedCount = req.user.savedProducts?.length || 0;
+      const recentComparisons = req.user.savedComparisons || [];
+      const comparisonsCount = recentComparisons.length;
+      
+      res.status(200).json({
+        success: true,
+        data: {
+          savedProducts: savedCount,
+          totalComparisons: comparisonsCount,
+          totalReviews: 0,
+          recentComparisons: recentComparisons,
+        },
+      });
+      return;
+    }
 
     const [savedCount, comparisonsCount, reviewsCount, recentComparisons] =
       await Promise.all([

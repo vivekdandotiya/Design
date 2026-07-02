@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import Product from '../models/Product';
 import Comparison from '../models/Comparison';
 import { AuthRequest } from '../middleware/auth';
 import { generateComparisonAnalysis, generateWebComparison } from '../services/ai.service';
+import { isDbOffline } from '../config/mockDb';
 
 interface CompareHighlight {
   bestValue: string;
@@ -141,10 +143,24 @@ export const compareProducts = async (req: Request, res: Response): Promise<void
     // Save comparison if user is authenticated
     const authReq = req as AuthRequest;
     if (authReq.user) {
-      await Comparison.create({
-        user: authReq.user._id,
-        products: productIds,
-      });
+      if (isDbOffline()) {
+        const mockUser = authReq.user as any;
+        mockUser.savedComparisons = mockUser.savedComparisons || [];
+        mockUser.savedComparisons.push({
+          _id: new mongoose.Types.ObjectId().toString(),
+          products: products,
+          comparedAt: new Date()
+        });
+      } else {
+        try {
+          await Comparison.create({
+            user: authReq.user._id,
+            products: productIds,
+          });
+        } catch (dbErr) {
+          console.warn('Failed to save comparison to DB:', dbErr);
+        }
+      }
     }
 
     res.status(200).json({
